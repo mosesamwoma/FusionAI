@@ -17,15 +17,18 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 | Gemini | gemini-1.5-flash |
 | Cloudflare Gateway | openai/gpt-4o-mini |
 
+## Activate Environment
+```bash
+.venv\Scripts\Activate.ps1
+```
+
+## Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
 ## Run
 ```bash
-# Activate the virtual environment
-.venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
 python main.py
 ```
 
