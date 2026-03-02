@@ -1,5 +1,0 @@
-##FusionAI – Multi-Provider LLM Fusion Engine
-
-FusionAI is a modular, multi-provider large language model (LLM) orchestration system that executes multiple AI models in parallel and intelligently fuses their outputs into a single improved response.
-
-It is designed as a scalable, provider-agnostic AI ensemble framework.
