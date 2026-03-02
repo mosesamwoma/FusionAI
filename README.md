@@ -1,0 +1,45 @@
+# FusionAI
+
+A multi-model AI fusion system that queries multiple LLMs simultaneously and synthesizes their responses into one superior answer using [Strands Agents](https://github.com/strands-agents/sdk-python).
+
+## How It Works
+
+1. A user prompt is sent to **Groq**, **Cerebras**, **Gemini**, and **Cloudflare AI Gateway** in parallel
+2. All responses are collected and combined
+3. A **Strands Agent** acts as an AI judge and fuses them into one final answer
+
+## Models Used
+
+| Provider | Model |
+|----------|-------|
+| Groq | llama-3.1-8b-instant |
+| Cerebras | llama3.1-8b |
+| Gemini | gemini-1.5-flash |
+| Cloudflare Gateway | openai/gpt-4o-mini |
+
+## Run
+
+```bash
+# Activate the virtual environment
+.venv\Scripts\Activate.ps1
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
+python main.py
+```
+
+## Requirements
+
+- Python 3.11+
+- Strands Agents SDK
+
+## Future Improvements
+
+- Add a web UI (Streamlit or Flask)
+- Add chat history and memory across sessions
+- Support more AI providers (OpenAI, Mistral, Cohere)
+- Allow users to select which models to include in the fusion
+- Add response scoring and ranking before fusion
+- Deploy as a REST API
