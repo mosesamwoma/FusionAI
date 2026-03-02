@@ -1,0 +1,4 @@
+.env
+FusionAI_Strand_Documentation.pdf
+__pycache__/
+.venv/
