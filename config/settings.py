@@ -8,6 +8,7 @@ load_dotenv(BASE_DIR / ".env")
 HF_TOKEN = os.getenv("HF_TOKEN")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 CEREBRAS_API_KEY = os.getenv("CEREBRAS_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 MODELS = [
     {
