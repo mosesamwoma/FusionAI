@@ -11,7 +11,7 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 ## Models Used
 
 | Provider | Model |
-|----------|-------|
+|-----------|-------|
 | Groq | llama-3.1-8b-instant |
 | Cerebras | llama3.1-8b |
 | Gemini | gemini-1.5-flash |
