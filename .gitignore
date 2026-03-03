@@ -1,5 +1,5 @@
 .env
-FusionAI_Strand_Documentation.pdf
+docs.pdf
 __pycache__/
 .venv/
 fusion_v_env/
