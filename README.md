@@ -4,7 +4,7 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 
 ## How It Works
 
-1. A user prompt is sent to **Groq**, **Cerebras**, **Gemini**, **SambaNova**, and **Mistral** in parallel
+1. A user prompt is sent to all configured LLMs in parallel
 2. All responses are collected and combined
 3. A **Strands Agent** acts as an AI judge and fuses them into one final answer
 
@@ -14,9 +14,12 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 |----------|-------|
 | Groq | llama-3.1-8b-instant |
 | Cerebras | llama3.1-8b |
-| Gemini | gemini-2.0-flash |
+| Gemini | gemini-2.5-flash |
 | SambaNova | Meta-Llama-3.1-8B-Instruct |
 | Mistral | mistral-small-latest |
+| Nvidia | meta/llama-3.1-8b-instruct |
+| Cohere | command-a-03-2025 |
+| OpenRouter | openrouter/auto |
 
 ## Activate Environment
 
@@ -46,6 +49,9 @@ CEREBRAS_API_KEY=your_cerebras_key
 GEMINI_API_KEY=your_gemini_key
 SAMBANOVA_API_KEY=your_sambanova_key
 MISTRAL_API_KEY=your_mistral_key
+NVIDIA_API_KEY=your_nvidia_key
+COHERE_API_KEY=your_cohere_key
+OPENROUTER_API_KEY=your_openrouter_key
 ```
 
 ## Usage Example
@@ -69,14 +75,19 @@ and use it to learn for themselves...
 > ⚠️ This project is experimental and not production-ready.
 
 - Response time depends on the slowest model in the pool
-- API costs apply depending on your provider usage
+- Free tier API keys have rate limits and daily quotas
 - Failed or timed out models are skipped silently
+- No persistent memory — conversation resets on every run
+- No streaming — response appears only after all models finish
+- Single user only — no multi-user or session support
+- Not optimized for long conversations or large prompts
+- Fusion quality depends on how many models respond successfully
 
 ## Future Improvements
 
 - Add a web UI (Streamlit or Flask)
 - Add chat history and memory across sessions
-- Support more AI providers (OpenAI, Cohere, Cloudflare)
+- Support more AI providers (OpenAI, Anthropic, Together AI)
 - Allow users to select which models to include in the fusion
 - Add response scoring and ranking before fusion
 - Deploy as a REST API
