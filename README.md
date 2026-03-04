@@ -22,19 +22,16 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 | OpenRouter | openrouter/auto |
 
 ## Activate Environment
-
 ```bash
 .venv\Scripts\Activate.ps1
 ```
 
 ## Install Dependencies
-
 ```bash
 pip install -r requirements.txt
 ```
 
 ## Run
-
 ```bash
 python main.py
 ```
@@ -42,7 +39,6 @@ python main.py
 ## Configuration
 
 Create a `.env` file in the project root with the following keys:
-
 ```
 GROQ_API_KEY=your_groq_key
 CEREBRAS_API_KEY=your_cerebras_key
@@ -55,7 +51,6 @@ OPENROUTER_API_KEY=your_openrouter_key
 ```
 
 ## Usage Example
-
 ```
 You: What is machine learning?
 
@@ -91,3 +86,9 @@ and use it to learn for themselves...
 - Allow users to select which models to include in the fusion
 - Add response scoring and ranking before fusion
 - Deploy as a REST API
+- Add streaming responses for faster output
+- Support image and multimodal inputs
+- Add model performance tracking and analytics
+- Add parallel async requests for faster fusion
+- Add a Docker container for easy deployment
+- Support voice input and output
