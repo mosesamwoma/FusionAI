@@ -17,6 +17,7 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 | Gemini | gemini-1.5-flash |
 | Cloudflare Gateway | openai/gpt-4o-mini |
 
+
 ## Activate Environment
 ```bash
 .venv\Scripts\Activate.ps1
@@ -64,7 +65,6 @@ and use it to learn for themselves...
 
 - Response time depends on the slowest model in the pool
 - API costs apply depending on your provider usage
-- No persistent memory or chat history yet
 - Error handling is basic — one failing model is skipped silently
 
 ## Future Improvements
