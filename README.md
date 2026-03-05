@@ -59,14 +59,14 @@ python test_providers.py
 
 Expected output:
 ```
-groq: How can I assist you today?
+groq: It's nice to meet you. Is there something I can help you with
 cerebras: How can I assist you today?
-gemini: Hi there! How can I help you today?
+gemini: Hello! How can I assist you today?
 sambanova: How can I assist you today?
-mistral: Hello! How can I assist you today?
+mistral: Hello! 😊 How can I help you today?
 nvidia: How can I assist you today?
 cohere: Hello! How can I assist you today?
-openrouter: Hi there! How can I help today?
+openrouter: Hi there! How can I help you today? I can answer questions
 ```
 
 If a provider shows an error, check its API key in `.env`.
