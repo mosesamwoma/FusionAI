@@ -78,12 +78,12 @@ python main.py
 
 ## Usage Example
 ```
-You: What is machine learning?
+You: What is data science?
 
-FusionAI: Machine learning is a subset of artificial intelligence that enables
-systems to learn and improve from experience without being explicitly
-programmed. It focuses on developing algorithms that can access data
-and use it to learn for themselves...
+FusionAI:  Data science is an interdisciplinary field that combines statistics, 
+computer science, and domain expertise to extract insights and knowledge from data, 
+driving informed business decisions, strategy, and operations, 
+and solving complex problems across various fields.
 ```
 
 ## Status & Limitations
