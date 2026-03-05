@@ -2,7 +2,7 @@ import requests
 from config.settings import GROQ_API_KEY
 
 
-def generate(model_name, prompt):
+def generate(model_name, conversation):
     response = requests.post(
         "https://api.groq.com/openai/v1/chat/completions",
         headers={
@@ -11,10 +11,13 @@ def generate(model_name, prompt):
         },
         json={
             "model": model_name,
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": conversation,
         },
     )
+
     data = response.json()
+
     if "error" in data:
         return f"Groq Error: {data['error']}"
+
     return data["choices"][0]["message"]["content"]
