@@ -2,7 +2,7 @@ import requests
 from config.settings import MISTRAL_API_KEY
 
 
-def generate(model_name, prompt):
+def generate(model_name, conversation):
     if not MISTRAL_API_KEY:
         return "Mistral API key not configured."
 
@@ -15,9 +15,7 @@ def generate(model_name, prompt):
             },
             json={
                 "model": model_name,
-                "messages": [
-                    {"role": "user", "content": prompt}
-                ],
+                "messages": conversation,
                 "temperature": 0.7,
             },
             timeout=30,
