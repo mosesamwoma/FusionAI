@@ -21,6 +21,25 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 | Cohere | command-a-03-2025 |
 | OpenRouter | openrouter/auto |
 
+## Requirements
+
+- Python 3.11+
+- Strands Agents SDK
+
+## Configuration
+
+Create a `.env` file in the project root with the following keys:
+```
+GROQ_API_KEY=your_groq_key
+CEREBRAS_API_KEY=your_cerebras_key
+GEMINI_API_KEY=your_gemini_key
+SAMBANOVA_API_KEY=your_sambanova_key
+MISTRAL_API_KEY=your_mistral_key
+NVIDIA_API_KEY=your_nvidia_key
+COHERE_API_KEY=your_cohere_key
+OPENROUTER_API_KEY=your_openrouter_key
+```
+
 ## Activate Environment
 ```bash
 .venv\Scripts\Activate.ps1
@@ -57,20 +76,6 @@ If a provider shows an error, check its API key in `.env`.
 python main.py
 ```
 
-## Configuration
-
-Create a `.env` file in the project root with the following keys:
-```
-GROQ_API_KEY=your_groq_key
-CEREBRAS_API_KEY=your_cerebras_key
-GEMINI_API_KEY=your_gemini_key
-SAMBANOVA_API_KEY=your_sambanova_key
-MISTRAL_API_KEY=your_mistral_key
-NVIDIA_API_KEY=your_nvidia_key
-COHERE_API_KEY=your_cohere_key
-OPENROUTER_API_KEY=your_openrouter_key
-```
-
 ## Usage Example
 ```
 You: What is machine learning?
@@ -80,11 +85,6 @@ systems to learn and improve from experience without being explicitly
 programmed. It focuses on developing algorithms that can access data
 and use it to learn for themselves...
 ```
-
-## Requirements
-
-- Python 3.11+
-- Strands Agents SDK
 
 ## Status & Limitations
 
