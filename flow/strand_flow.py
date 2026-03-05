@@ -1,53 +1,63 @@
+from strands import Agent, tool
+from strands.models.openai import OpenAIModel
+from fusion.fusion_engine import fuse
 from model.client import generate
-from config.settings import MODELS, FUSION_MODEL
+from config.settings import MODELS, FUSION_MODEL, GROQ_API_KEY
+
+
+collected_responses = []
+
+
+def make_tool(provider, model_name):
+    tool_name = f"query_{provider}_{model_name.replace('/', '_').replace('-', '_').replace('.', '_').replace(':', '_')}"
+
+    @tool(name=tool_name, description=f"Query {provider} model {model_name}")
+    def model_tool(prompt: str) -> str:
+        result = generate(provider, model_name, [
+                          {"role": "user", "content": prompt}])
+        if "Error:" not in result:
+            collected_responses.append(result)
+        return result if "Error:" not in result else "[SKIP]"
+
+    return model_tool
+
+
+model_tools = [make_tool(m["provider"], m["model"]) for m in MODELS]
 
 
 def build_flow(conversation):
-
-    responses = []
-    for m in MODELS:
-        try:
-            result = generate(m["provider"], m["model"], conversation)
-            if (
-                result
-                and isinstance(result, str)
-                and "error" not in result.lower()
-                and "api key" not in result.lower()
-                and "invalid" not in result.lower()
-                and "timeout" not in result.lower()
-            ):
-                responses.append((m["provider"], m["model"], result))
-        except Exception:
-            continue
-
-    if not responses:
-        return "All providers failed. Please try again."
+    global collected_responses
+    collected_responses = []
 
     latest_prompt = conversation[-1]["content"]
 
-    combined = "\n\n".join(
-        f"[{provider}/{model}]\n{result}"
-        for provider, model, result in responses
+    if len(conversation) > 1:
+        history = "\n".join(
+            f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}"
+            for m in conversation[:-1]
+        )
+        latest_prompt = f"Conversation so far:\n{history}\n\nLatest question: {latest_prompt}"
+
+    fusion_model = OpenAIModel(
+        client_args={
+            "api_key": GROQ_API_KEY,
+            "base_url": "https://api.groq.com/openai/v1",
+        },
+        model_id=FUSION_MODEL["model"],
+        params={"max_tokens": 2048, "temperature": 0.7},
     )
 
-    fusion_prompt = f"""
-You are an expert AI response synthesizer.
-Merge the answers below into ONE clear, coherent, improved response.
-- Keep only correct and useful information.
-- Remove contradictions.
-- Do NOT mention APIs, models, or technical issues.
-- Produce a clean final answer only.
-
-User Question:
-{latest_prompt}
-
-Model Answers:
-{combined}
-"""
-
-    final = generate(
-        FUSION_MODEL["provider"],
-        FUSION_MODEL["model"],
-        conversation + [{"role": "user", "content": fusion_prompt}],
+    fusion_agent = Agent(
+        model=fusion_model,
+        tools=model_tools,
+        callback_handler=None,
+        system_prompt="""You are an AI orchestrator.
+For every question:
+- Call each tool one at a time with the user question
+- After calling all tools respond with exactly: FUSION_READY
+- Do not write anything else""",
     )
-    return final
+
+    fusion_agent(latest_prompt)
+
+    return fuse(conversation[-1]["content"], collected_responses)
