@@ -31,6 +31,27 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 pip install -r requirements.txt
 ```
 
+## Test Providers
+
+Before running the app, verify all APIs are working:
+```bash
+python test_providers.py
+```
+
+Expected output:
+```
+groq: How can I assist you today?
+cerebras: How can I assist you today?
+gemini: Hi there! How can I help you today?
+sambanova: How can I assist you today?
+mistral: Hello! How can I assist you today?
+nvidia: How can I assist you today?
+cohere: Hello! How can I assist you today?
+openrouter: Hi there! How can I help today?
+```
+
+If a provider shows an error, check its API key in `.env`.
+
 ## Run
 ```bash
 python main.py
@@ -86,7 +107,6 @@ and use it to learn for themselves...
 - Allow users to select which models to include in the fusion
 - Add response scoring and ranking before fusion
 - Deploy as a REST API
-- Add streaming responses for faster output
 - Support image and multimodal inputs
 - Add model performance tracking and analytics
 - Add parallel async requests for faster fusion
