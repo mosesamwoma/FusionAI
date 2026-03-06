@@ -108,11 +108,9 @@ and solving complex problems across various fields.
 
 - Add a web UI (Flask)
 - Add chat history and memory across sessions
-- Support more AI providers (OpenAI, Anthropic, Together AI)
-- Allow users to select which models to include in the fusion
+- Support more advanced AI providers (OpenAI, Anthropic, Together AI)
 - Deploy as a REST API
 - Support image and multimodal inputs
-- Add model performance tracking and analytics
 - Add parallel async requests for faster fusion
 - Add a Docker container for easy deployment
 - Support voice input and output
