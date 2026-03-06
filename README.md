@@ -4,22 +4,23 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 
 ## How It Works
 
-1. A user prompt is sent to all configured LLMs in parallel
-2. All responses are collected and combined
-3. A **Strands Agent** acts as an AI judge and fuses them into one final answer
+1. A user prompt is sent to all configured LLMs via Strands Agent tools
+2. Each model is registered as a `@tool` that the Strands Agent calls
+3. All responses are collected and passed to the Fusion Engine
+4. The Fusion Engine synthesizes them into one superior final answer
 
 ## Models Used
 
-| Provider | Model |
-|----------|-------|
-| Groq | llama-3.1-8b-instant |
+| Provider | Models |
+|----------|--------|
+| Groq | llama-3.1-8b-instant, llama-3.3-70b-versatile |
 | Cerebras | llama3.1-8b |
 | Gemini | gemini-2.5-flash |
 | SambaNova | Meta-Llama-3.1-8B-Instruct |
-| Mistral | mistral-small-latest |
-| Nvidia | meta/llama-3.1-8b-instruct |
+| Mistral | mistral-small-latest, open-mistral-7b |
+| Nvidia | meta/llama-3.1-8b-instruct, meta/llama-3.1-70b-instruct |
 | Cohere | command-a-03-2025 |
-| OpenRouter | openrouter/auto |
+| OpenRouter | gemma-3-12b-it:free, gemma-3-4b-it:free |
 
 ## Requirements
 
@@ -28,7 +29,7 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 
 ## Configuration
 
-Create a `.env` file in the project root with the following keys:
+Create a `.env` file in the project root:
 ```
 GROQ_API_KEY=your_groq_key
 CEREBRAS_API_KEY=your_cerebras_key
@@ -59,14 +60,18 @@ python test_providers.py
 
 Expected output:
 ```
-groq: It's nice to meet you. Is there something I can help you with
-cerebras: How can I assist you today?
-gemini: Hello! How can I assist you today?
-sambanova: How can I assist you today?
-mistral: Hello! 😊 How can I help you today?
-nvidia: How can I assist you today?
-cohere: Hello! How can I assist you today?
-openrouter: Hi there! How can I help you today? I can answer questions
+groq-8b: How can I assist you today?
+groq-70b: It's nice to meet you. Is there something I can help you with
+cerebras-8b: How can I assist you today?
+gemini-2.5: Hi there! How can I help you today?
+sambanova-8b: How can I assist you today?
+mistral-small: Hello! 😊 How can I help you today?
+mistral-7b: Hello! 😊 How can I help you today?
+nvidia-8b: How can I assist you today?
+nvidia-70b: How can I assist you today?
+cohere-a: Hello! How can I assist you today?
+openrouter-gemma-12b: Hi there! How can I help you today?
+openrouter-gemma-4b: Hi there! How can I help you today?
 ```
 
 If a provider shows an error, check its API key in `.env`.
@@ -80,9 +85,9 @@ python main.py
 ```
 You: What is data science?
 
-FusionAI:  Data science is an interdisciplinary field that combines statistics, 
-computer science, and domain expertise to extract insights and knowledge from data, 
-driving informed business decisions, strategy, and operations, 
+FusionAI: Data science is an interdisciplinary field that combines statistics,
+computer science, and domain expertise to extract insights and knowledge from data,
+driving informed business decisions, strategy, and operations,
 and solving complex problems across various fields.
 ```
 
@@ -91,7 +96,7 @@ and solving complex problems across various fields.
 > ⚠️ This project is experimental and not production-ready.
 
 - Response time depends on the slowest model in the pool
-- Free tier API keys have rate limits and daily quotas
+- API rate limits and daily quotas may affect availability
 - Failed or timed out models are skipped silently
 - No persistent memory — conversation resets on every run
 - No streaming — response appears only after all models finish
