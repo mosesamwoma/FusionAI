@@ -40,9 +40,9 @@ MODELS = [
     {"provider": "cohere", "model": "command-a-03-2025"},
 
     # OpenRouter
-    {"provider": "openrouter", "model": "google/gemma-3-12b-it:free"},
-    {"provider": "openrouter", "model": "google/gemma-3-4b-it:free"},
-    {"provider": "openrouter", "model": "meta-llama/llama-3.1-8b-instruct:free"},
+    {"provider": "openrouter", "model": "google/gemma-3-12b-it"},
+    {"provider": "openrouter", "model": "google/gemma-3-4b-it"},
+    {"provider": "openrouter", "model": "meta-llama/llama-3.1-8b-instruct"},
 ]
 
 FUSION_MODEL = {
