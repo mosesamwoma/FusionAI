@@ -110,7 +110,6 @@ and solving complex problems across various fields.
 - Add chat history and memory across sessions
 - Support more AI providers (OpenAI, Anthropic, Together AI)
 - Allow users to select which models to include in the fusion
-- Add response scoring and ranking before fusion
 - Deploy as a REST API
 - Support image and multimodal inputs
 - Add model performance tracking and analytics
