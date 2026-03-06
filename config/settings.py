@@ -42,6 +42,7 @@ MODELS = [
     # OpenRouter
     {"provider": "openrouter", "model": "google/gemma-3-12b-it:free"},
     {"provider": "openrouter", "model": "google/gemma-3-4b-it:free"},
+    {"provider": "openrouter", "model": "meta-llama/llama-3.1-8b-instruct:free"},
 ]
 
 FUSION_MODEL = {
