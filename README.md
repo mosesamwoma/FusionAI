@@ -106,7 +106,7 @@ and solving complex problems across various fields.
 
 ## Future Improvements
 
-- Add a web UI (Streamlit or Flask)
+- Add a web UI (Flask)
 - Add chat history and memory across sessions
 - Support more AI providers (OpenAI, Anthropic, Together AI)
 - Allow users to select which models to include in the fusion
