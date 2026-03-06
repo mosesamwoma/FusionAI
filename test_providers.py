@@ -33,7 +33,7 @@ print("nvidia-70b:", safe("nvidia", "meta/llama-3.1-70b-instruct"))
 
 print("cohere-a:", safe("cohere", "command-a-03-2025"))
 
-print("openrouter-gemma-12b:", safe("openrouter", "google/gemma-3-12b-it:free"))
-print("openrouter-gemma-4b:", safe("openrouter", "google/gemma-3-4b-it:free"))
-print("openrouter-llama:", safe("openrouter",
-      "meta-llama/llama-3.1-8b-instruct:free"))
+print("openrouter-gemma-12b:", safe("openrouter", "google/gemma-3-12b-it"))
+print("openrouter-gemma-4b:", safe("openrouter", "google/gemma-3-4b-it"))
+
+print("openrouter-llama:", safe("openrouter", "meta-llama/llama-3.1-8b-instruct"))
