@@ -114,14 +114,14 @@ and solving complex problems across various fields.
 
 ## Completed Features
 
-- ✅ 13 models queried in parallel using asyncio
-- ✅ Strands Agent for intelligent response fusion
-- ✅ Flask web UI with modern dark theme
-- ✅ CLI interface
-- ✅ Chat history persisted across sessions
-- ✅ Async requests for 30-50% speed improvement
-- ✅ Automatic conversation trimming
-- ✅ Graceful fallback if Strands fails
+- 13 models queried in parallel using asyncio
+- Strands Agent for intelligent response fusion
+- Flask web UI with modern dark theme
+- CLI interface
+- Chat history persisted across sessions
+- Async requests for 30-50% speed improvement
+- Automatic conversation trimming
+- Graceful fallback if Strands fails
 
 ## Future Improvements
 
