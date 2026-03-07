@@ -68,7 +68,6 @@ def build_flow(conversation):
     else:
         full_prompt = latest_prompt
 
-    # Try Strands fusion first
     try:
         fusion_model = OpenAIModel(
             client_args={
@@ -96,6 +95,6 @@ When given a question:
         return str(result)
 
     except Exception:
-        # Fallback to direct fusion if Strands fails
+
         responses = query_all_models(full_prompt)
         return fuse(conversation[-1]["content"], responses)
