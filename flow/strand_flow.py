@@ -1,3 +1,4 @@
+import concurrent.futures
 from strands import Agent, tool
 from strands.models.openai import OpenAIModel
 from fusion.fusion_engine import fuse
@@ -5,59 +6,96 @@ from model.client import generate
 from config.settings import MODELS, FUSION_MODEL, GROQ_API_KEY
 
 
-collected_responses = []
+MAX_HISTORY_TURNS = 5
 
 
-def make_tool(provider, model_name):
-    tool_name = f"query_{provider}_{model_name.replace('/', '_').replace('-', '_').replace('.', '_').replace(':', '_')}"
-
-    @tool(name=tool_name, description=f"Query {provider} model {model_name}")
-    def model_tool(prompt: str) -> str:
-        result = generate(provider, model_name, [
-                          {"role": "user", "content": prompt}])
-        if "Error:" not in result:
-            collected_responses.append(result)
-        return result if "Error:" not in result else "[SKIP]"
-
-    return model_tool
+def trim_conversation(conversation):
+    if len(conversation) <= MAX_HISTORY_TURNS * 2:
+        return conversation
+    return conversation[-(MAX_HISTORY_TURNS * 2):]
 
 
-model_tools = [make_tool(m["provider"], m["model"]) for m in MODELS]
+def query_all_models(prompt):
+    def query(m):
+        try:
+            result = generate(m["provider"], m["model"], [
+                              {"role": "user", "content": prompt}])
+            if result and "Error:" not in result:
+                return result[:600]
+            return None
+        except Exception:
+            return None
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(MODELS)) as executor:
+        futures = {executor.submit(query, m): m for m in MODELS}
+        done, not_done = concurrent.futures.wait(futures, timeout=20)
+        for f in not_done:
+            f.cancel()
+
+        responses = []
+        for future in done:
+            try:
+                result = future.result()
+                if result:
+                    responses.append(result)
+            except Exception:
+                continue
+    return responses
+
+
+@tool
+def query_all_llms(prompt: str) -> str:
+    """Query all configured LLM models in parallel and return their combined responses."""
+    responses = query_all_models(prompt)
+    if not responses:
+        return "All models failed to respond."
+    combined = "\n\n".join(
+        f"Model {i+1}:\n{r}" for i, r in enumerate(responses))
+    return combined
 
 
 def build_flow(conversation):
-    global collected_responses
-    collected_responses = []
 
-    latest_prompt = conversation[-1]["content"]
+    trimmed = trim_conversation(conversation)
+    latest_prompt = trimmed[-1]["content"]
 
-    if len(conversation) > 1:
+    if len(trimmed) > 1:
         history = "\n".join(
             f"{'User' if m['role'] == 'user' else 'Assistant'}: {m['content']}"
-            for m in conversation[:-1]
+            for m in trimmed[:-1]
         )
-        latest_prompt = f"Conversation so far:\n{history}\n\nLatest question: {latest_prompt}"
+        full_prompt = f"Previous conversation:\n{history}\n\nCurrent question: {latest_prompt}"
+    else:
+        full_prompt = latest_prompt
 
-    fusion_model = OpenAIModel(
-        client_args={
-            "api_key": GROQ_API_KEY,
-            "base_url": "https://api.groq.com/openai/v1",
-        },
-        model_id=FUSION_MODEL["model"],
-        params={"max_tokens": 2048, "temperature": 0.7},
-    )
+    # Try Strands fusion first
+    try:
+        fusion_model = OpenAIModel(
+            client_args={
+                "api_key": GROQ_API_KEY,
+                "base_url": "https://api.groq.com/openai/v1",
+                "timeout": 30,
+            },
+            model_id=FUSION_MODEL["model"],
+            params={"max_tokens": 1024, "temperature": 0.7},
+        )
 
-    fusion_agent = Agent(
-        model=fusion_model,
-        tools=model_tools,
-        callback_handler=None,
-        system_prompt="""You are an AI orchestrator.
-For every question:
-- Call each tool one at a time with the user question
-- After calling all tools respond with exactly: FUSION_READY
-- Do not write anything else""",
-    )
+        fusion_agent = Agent(
+            model=fusion_model,
+            tools=[query_all_llms],
+            callback_handler=None,
+            system_prompt="""You are FusionAI — an expert AI response synthesizer.
+When given a question:
+1. Call the query_all_llms tool with the current question
+2. Synthesize all responses into ONE complete, clear, accurate final answer
+3. Never mention models, tools, APIs or technical details
+4. Always produce a complete answer""",
+        )
 
-    fusion_agent(latest_prompt)
+        result = fusion_agent(full_prompt)
+        return str(result)
 
-    return fuse(conversation[-1]["content"], collected_responses)
+    except Exception:
+        # Fallback to direct fusion if Strands fails
+        responses = query_all_models(full_prompt)
+        return fuse(conversation[-1]["content"], responses)

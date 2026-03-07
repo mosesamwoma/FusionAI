@@ -47,5 +47,5 @@ MODELS = [
 
 FUSION_MODEL = {
     "provider": "groq",
-    "model": "llama-3.3-70b-versatile",
+    "model": "llama-3.1-8b-instant",
 }
