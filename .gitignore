@@ -1,5 +1,9 @@
 .env
-docs.pdf
+*.pdf
 __pycache__/
+*.pyc
+*.pyo
 .venv/
 fusion_v_env/
+memory.db
+*.db
