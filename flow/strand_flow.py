@@ -1,12 +1,30 @@
-import concurrent.futures
+import asyncio
+import aiohttp
 from strands import Agent, tool
 from strands.models.openai import OpenAIModel
 from fusion.fusion_engine import fuse
-from model.client import generate
 from config.settings import MODELS, FUSION_MODEL, GROQ_API_KEY
-
+import model.groq as groq
+import model.cerebras as cerebras
+import model.gemini as gemini
+import model.sambanova as sambanova
+import model.mistral as mistral
+import model.nvidia as nvidia
+import model.cohere as cohere
+import model.openrouter as openrouter
 
 MAX_HISTORY_TURNS = 5
+
+ASYNC_PROVIDERS = {
+    "groq": groq,
+    "cerebras": cerebras,
+    "gemini": gemini,
+    "sambanova": sambanova,
+    "mistral": mistral,
+    "nvidia": nvidia,
+    "cohere": cohere,
+    "openrouter": openrouter,
+}
 
 
 def trim_conversation(conversation):
@@ -15,43 +33,39 @@ def trim_conversation(conversation):
     return conversation[-(MAX_HISTORY_TURNS * 2):]
 
 
-def query_all_models(prompt):
-    def query(m):
-        try:
-            result = generate(m["provider"], m["model"], [
-                              {"role": "user", "content": prompt}])
-            if result and "Error:" not in result:
-                return result[:600]
-            return None
-        except Exception:
-            return None
+async def query_all_async(prompt):
+    conversation = [{"role": "user", "content": prompt}]
+    async with aiohttp.ClientSession() as session:
+        tasks = [
+            ASYNC_PROVIDERS[m["provider"]].async_generate(
+                session, m["model"], conversation)
+            for m in MODELS
+            if m["provider"] in ASYNC_PROVIDERS
+        ]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(MODELS)) as executor:
-        futures = {executor.submit(query, m): m for m in MODELS}
-        done, not_done = concurrent.futures.wait(futures, timeout=20)
-        for f in not_done:
-            f.cancel()
-
-        responses = []
-        for future in done:
-            try:
-                result = future.result()
-                if result:
-                    responses.append(result)
-            except Exception:
-                continue
+    responses = []
+    for r in results:
+        if r and isinstance(r, str) and "Error:" not in r:
+            responses.append(r)
     return responses
 
 
 @tool
 def query_all_llms(prompt: str) -> str:
     """Query all configured LLM models in parallel and return their combined responses."""
-    responses = query_all_models(prompt)
+    try:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        responses = loop.run_until_complete(query_all_async(prompt))
+        loop.close()
+    except Exception:
+        responses = []
+
     if not responses:
         return "All models failed to respond."
-    combined = "\n\n".join(
-        f"Model {i+1}:\n{r}" for i, r in enumerate(responses))
-    return combined
+
+    return "\n\n".join(f"Model {i+1}:\n{r}" for i, r in enumerate(responses))
 
 
 def build_flow(conversation):
@@ -96,5 +110,11 @@ Rules:
         return str(result)
 
     except Exception:
-        responses = query_all_models(full_prompt)
+        try:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            responses = loop.run_until_complete(query_all_async(full_prompt))
+            loop.close()
+        except Exception:
+            responses = []
         return fuse(conversation[-1]["content"], responses)
