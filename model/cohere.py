@@ -1,34 +1,43 @@
 import requests
+import aiohttp
 from config.settings import COHERE_API_KEY
+
+URL = "https://api.cohere.com/v2/chat"
+HEADERS = {
+    "Authorization": f"Bearer {COHERE_API_KEY}",
+    "Content-Type": "application/json",
+}
 
 
 def generate(model_name, conversation):
     try:
-        messages = []
-        for msg in conversation:
-            role = "USER" if msg["role"] == "user" else "CHATBOT"
-            messages.append({"role": role, "message": msg["content"]})
-
-        last_message = messages[-1]["message"]
-        history = messages[:-1]
-
         response = requests.post(
-            "https://api.cohere.com/v1/chat",
-            headers={
-                "Authorization": f"Bearer {COHERE_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": model_name,
-                "message": last_message,
-                "chat_history": history,
-                "max_tokens": 512,
-            },
-            timeout=30,
+            URL,
+            headers=HEADERS,
+            json={"model": model_name,
+                  "messages": conversation, "max_tokens": 800},
+            timeout=10,
         )
         data = response.json()
-        if "message" in data and "text" not in data:
-            return f"Cohere Error: {data['message']}"
-        return data["text"]
+        if "error" in data:
+            return f"Cohere Error: {data['error']}"
+        return data["message"]["content"][0]["text"]
     except Exception as e:
         return f"Cohere Error: {str(e)}"
+
+
+async def async_generate(session, model_name, conversation):
+    try:
+        async with session.post(
+            URL,
+            headers=HEADERS,
+            json={"model": model_name,
+                  "messages": conversation, "max_tokens": 800},
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as response:
+            data = await response.json()
+            if "error" in data:
+                return None
+            return data["message"]["content"][0]["text"][:600]
+    except Exception:
+        return None
