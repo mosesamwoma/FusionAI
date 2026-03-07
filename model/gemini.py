@@ -1,31 +1,46 @@
-import time
-from google import genai
+import requests
+import aiohttp
 from config.settings import GEMINI_API_KEY
+
+URL = "https://generativelanguage.googleapis.com/v1beta/models"
 
 
 def generate(model_name, conversation):
     try:
-        client = genai.Client(api_key=GEMINI_API_KEY)
-
-        history = []
-        for msg in conversation[:-1]:
-            role = "user" if msg["role"] == "user" else "model"
-            history.append({"role": role, "parts": [{"text": msg["content"]}]})
-
-        latest = conversation[-1]["content"]
-
-        for attempt in range(3):
-            try:
-                chat = client.chats.create(model=model_name, history=history)
-                response = chat.send_message(latest)
-                return response.text
-            except Exception as e:
-                if "429" in str(e):
-                    time.sleep(5)
-                    continue
-                return f"Gemini Error: {str(e)}"
-
-        return "Gemini Error: Rate limit exceeded, try again later"
-
+        messages = [
+            {"role": m["role"], "parts": [{"text": m["content"]}]}
+            for m in conversation
+        ]
+        response = requests.post(
+            f"{URL}/{model_name}:generateContent",
+            headers={"Content-Type": "application/json"},
+            params={"key": GEMINI_API_KEY},
+            json={"contents": messages},
+            timeout=10,
+        )
+        data = response.json()
+        if "error" in data:
+            return f"Gemini Error: {data['error'].get('message', 'Unknown error')}"
+        return data["candidates"][0]["content"]["parts"][0]["text"]
     except Exception as e:
         return f"Gemini Error: {str(e)}"
+
+
+async def async_generate(session, model_name, conversation):
+    try:
+        messages = [
+            {"role": m["role"], "parts": [{"text": m["content"]}]}
+            for m in conversation
+        ]
+        async with session.post(
+            f"{URL}/{model_name}:generateContent",
+            params={"key": GEMINI_API_KEY},
+            json={"contents": messages},
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as response:
+            data = await response.json()
+            if "error" in data:
+                return None
+            return data["candidates"][0]["content"]["parts"][0]["text"][:600]
+    except Exception:
+        return None
