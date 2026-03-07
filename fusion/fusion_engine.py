@@ -18,11 +18,9 @@ def fuse(question, answers):
     )
 
     fusion_prompt = f"""
-You are an expert AI response synthesizer.
-Combine ALL answers into one complete, clear, accurate and detailed final answer.
-Do NOT cut off or truncate the response — always finish completely.
-Do NOT mention models, APIs, or technical issues.
-Produce a clean complete final answer only.
+Combine the answers below into one single direct response.
+No preamble. No meta-commentary. No mention of models or synthesis.
+Just answer directly as if you are the one answering.
 
 Question: {question}
 
