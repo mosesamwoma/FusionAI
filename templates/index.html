@@ -5,40 +5,102 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FusionAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
+    <div class="bg-grid"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+
     <header>
-        <h1>⚡ FusionAI</h1>
-        <span>13 models · 8 providers</span>
-        <button id="reset-btn" onclick="resetChat()">New Chat</button>
+        <div class="logo">
+            <div class="logo-icon">
+                <span>F</span>
+            </div>
+            <div class="logo-text">
+                <h1>FusionAI</h1>
+                <span class="tagline">13 models · 8 providers</span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <div class="status-badge">
+                <span class="status-dot"></span>
+                <span>Live</span>
+            </div>
+            <button id="reset-btn" onclick="resetChat()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                </svg>
+                New Chat
+            </button>
+        </div>
     </header>
 
-    <div id="chat-box">
-        <div class="message assistant">
-            👋 Hello! I'm FusionAI — powered by 13 AI models working together. Ask me anything!
+    <main>
+        <div id="chat-box">
+            <div class="welcome">
+                <div class="welcome-icon">⚡</div>
+                <h2>What can I help you with?</h2>
+                <p>Powered by 13 AI models working in parallel to give you the best answer.</p>
+                <div class="provider-chips">
+                    <span>Groq</span>
+                    <span>Gemini</span>
+                    <span>Mistral</span>
+                    <span>Cerebras</span>
+                    <span>Cohere</span>
+                    <span>Nvidia</span>
+                    <span>SambaNova</span>
+                    <span>OpenRouter</span>
+                </div>
+            </div>
         </div>
-    </div>
+    </main>
 
-    <div id="model-count">Responses are fused from multiple AI models</div>
-
-    <div id="input-area">
-        <input type="text" id="user-input" placeholder="Ask me anything..." autofocus />
-        <button id="send-btn" onclick="sendMessage()">Send</button>
-    </div>
+    <footer>
+        <div id="input-wrapper">
+            <div id="input-area">
+                <input type="text" id="user-input" placeholder="Ask anything..." autofocus />
+                <button id="send-btn" onclick="sendMessage()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                    </svg>
+                </button>
+            </div>
+            <p class="disclaimer">FusionAI synthesizes responses from multiple models. Results may vary.</p>
+        </div>
+    </footer>
 
     <script>
+        window.onload = async function () {
+            const res = await fetch("/history");
+            const data = await res.json();
+            if (data.length > 0) {
+                document.querySelector(".welcome").remove();
+                data.forEach(msg => appendMessage(msg.role, msg.content));
+            }
+        }
+
         async function sendMessage() {
             const input = document.getElementById("user-input");
             const message = input.value.trim();
             if (!message) return;
 
+            const welcome = document.querySelector(".welcome");
+            if (welcome) welcome.remove();
+
             input.value = "";
             document.getElementById("send-btn").disabled = true;
 
             appendMessage("user", message);
-            const thinking = appendMessage("thinking", "⏳ Querying all models and fusing responses...");
+            const thinking = appendThinking();
 
             try {
                 const res = await fetch("/chat", {
@@ -55,23 +117,69 @@
             }
 
             document.getElementById("send-btn").disabled = false;
-            document.getElementById("user-input").focus();
+            input.focus();
         }
 
         function appendMessage(role, text) {
             const box = document.getElementById("chat-box");
-            const div = document.createElement("div");
-            div.className = `message ${role}`;
-            div.textContent = text;
-            box.appendChild(div);
+            const wrapper = document.createElement("div");
+            wrapper.className = `message-wrapper ${role}`;
+
+            if (role === "assistant") {
+                const avatar = document.createElement("div");
+                avatar.className = "avatar";
+                avatar.textContent = "F";
+                wrapper.appendChild(avatar);
+            }
+
+            const bubble = document.createElement("div");
+            bubble.className = `bubble ${role}`;
+            bubble.textContent = text;
+            wrapper.appendChild(bubble);
+
+            box.appendChild(wrapper);
             box.scrollTop = box.scrollHeight;
-            return div;
+            return wrapper;
+        }
+
+        function appendThinking() {
+            const box = document.getElementById("chat-box");
+            const wrapper = document.createElement("div");
+            wrapper.className = "message-wrapper assistant";
+
+            const avatar = document.createElement("div");
+            avatar.className = "avatar";
+            avatar.textContent = "F";
+            wrapper.appendChild(avatar);
+
+            const bubble = document.createElement("div");
+            bubble.className = "bubble assistant thinking";
+            bubble.innerHTML = `
+                <div class="thinking-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="thinking-text">Querying 13 models...</span>
+            `;
+            wrapper.appendChild(bubble);
+            box.appendChild(wrapper);
+            box.scrollTop = box.scrollHeight;
+            return wrapper;
         }
 
         async function resetChat() {
             await fetch("/reset", { method: "POST" });
             const box = document.getElementById("chat-box");
-            box.innerHTML = `<div class="message assistant">👋 Hello! I'm FusionAI — powered by 13 AI models working together. Ask me anything!</div>`;
+            box.innerHTML = `
+                <div class="welcome">
+                    <div class="welcome-icon">⚡</div>
+                    <h2>What can I help you with?</h2>
+                    <p>Powered by 13 AI models working in parallel to give you the best answer.</p>
+                    <div class="provider-chips">
+                        <span>Groq</span><span>Gemini</span><span>Mistral</span>
+                        <span>Cerebras</span><span>Cohere</span><span>Nvidia</span>
+                        <span>SambaNova</span><span>OpenRouter</span>
+                    </div>
+                </div>`;
         }
 
         document.getElementById("user-input").addEventListener("keydown", function (e) {
