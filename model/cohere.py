@@ -1,43 +1,70 @@
 import requests
 import aiohttp
-from config.settings import COHERE_API_KEY
+from config.settings import OPENROUTER_API_KEY
 
-URL = "https://api.cohere.com/v2/chat"
-HEADERS = {
-    "Authorization": f"Bearer {COHERE_API_KEY}",
-    "Content-Type": "application/json",
-}
+URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
-def generate(model_name, conversation):
+def get_headers():
+    return {
+        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://fusionai.app",
+        "X-Title": "FusionAI",
+    }
+
+
+def generate(model_name, conversation, image_data=None, image_mime=None):
     try:
+        messages = []
+        for m in conversation:
+            if image_data and m == conversation[-1] and "vision" in model_name:
+                content = [
+                    {"type": "text", "text": m["content"]},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:{image_mime or 'image/jpeg'};base64,{image_data}"}}
+                ]
+            else:
+                content = m["content"]
+            messages.append({"role": m["role"], "content": content})
+
         response = requests.post(
             URL,
-            headers=HEADERS,
-            json={"model": model_name,
-                  "messages": conversation, "max_tokens": 800},
-            timeout=10,
+            headers=get_headers(),
+            json={"model": model_name, "messages": messages, "max_tokens": 8000},
+            timeout=30,
         )
         data = response.json()
         if "error" in data:
-            return f"Cohere Error: {data['error']}"
-        return data["message"]["content"][0]["text"]
+            return f"OpenRouter Error: {data['error']}"
+        return data["choices"][0]["message"]["content"]
     except Exception as e:
-        return f"Cohere Error: {str(e)}"
+        return f"OpenRouter Error: {str(e)}"
 
 
-async def async_generate(session, model_name, conversation):
+async def async_generate(session, model_name, conversation, image_data=None, image_mime=None):
     try:
+        messages = []
+        for m in conversation:
+            if image_data and m == conversation[-1] and "vision" in model_name:
+                content = [
+                    {"type": "text", "text": m["content"]},
+                    {"type": "image_url", "image_url": {
+                        "url": f"data:{image_mime or 'image/jpeg'};base64,{image_data}"}}
+                ]
+            else:
+                content = m["content"]
+            messages.append({"role": m["role"], "content": content})
+
         async with session.post(
             URL,
-            headers=HEADERS,
-            json={"model": model_name,
-                  "messages": conversation, "max_tokens": 800},
-            timeout=aiohttp.ClientTimeout(total=10),
+            headers=get_headers(),
+            json={"model": model_name, "messages": messages, "max_tokens": 8000},
+            timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
             data = await response.json()
             if "error" in data:
                 return None
-            return data["message"]["content"][0]["text"][:600]
+            return data["choices"][0]["message"]["content"][:10000]
     except Exception:
         return None
