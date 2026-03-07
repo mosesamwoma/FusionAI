@@ -30,7 +30,6 @@ body {
     position: relative;
 }
 
-/* Background grid */
 .bg-grid {
     position: fixed;
     inset: 0;
@@ -42,7 +41,6 @@ body {
     z-index: 0;
 }
 
-/* Glow effects */
 .glow {
     position: fixed;
     border-radius: 50%;
@@ -67,7 +65,6 @@ body {
     right: -50px;
 }
 
-/* Header */
 header {
     position: relative;
     z-index: 10;
@@ -172,7 +169,6 @@ header {
     color: var(--accent);
 }
 
-/* Main chat area */
 main {
     flex: 1;
     overflow: hidden;
@@ -204,7 +200,6 @@ main {
     border-radius: 4px;
 }
 
-/* Welcome screen */
 .welcome {
     display: flex;
     flex-direction: column;
@@ -273,7 +268,6 @@ main {
     color: var(--accent);
 }
 
-/* Messages */
 .message-wrapper {
     display: flex;
     align-items: flex-start;
@@ -327,6 +321,7 @@ main {
     color: white;
     border-bottom-right-radius: 4px;
     box-shadow: 0 4px 20px rgba(108, 99, 255, 0.25);
+    white-space: pre-wrap;
 }
 
 .bubble.assistant {
@@ -334,9 +329,9 @@ main {
     color: var(--text);
     border: 1px solid var(--border);
     border-bottom-left-radius: 4px;
+    white-space: normal;
 }
 
-/* Thinking animation */
 .bubble.thinking {
     display: flex;
     align-items: center;
@@ -387,7 +382,6 @@ main {
     font-style: italic;
 }
 
-/* Footer input */
 footer {
     position: relative;
     z-index: 10;
@@ -459,4 +453,263 @@ footer {
     font-size: 0.68rem;
     color: var(--text-muted);
     margin-top: 8px;
+}
+
+/* Markdown styles */
+.bubble.assistant h1,
+.bubble.assistant h2,
+.bubble.assistant h3 {
+    font-family: var(--font-display);
+    color: var(--text);
+    margin: 12px 0 6px;
+}
+
+.bubble.assistant h1 {
+    font-size: 1.2rem;
+}
+
+.bubble.assistant h2 {
+    font-size: 1.1rem;
+}
+
+.bubble.assistant h3 {
+    font-size: 1rem;
+}
+
+.bubble.assistant p {
+    margin: 6px 0;
+    line-height: 1.7;
+}
+
+.bubble.assistant ul,
+.bubble.assistant ol {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.bubble.assistant li {
+    margin: 4px 0;
+    line-height: 1.6;
+}
+
+.bubble.assistant code {
+    background: rgba(108, 99, 255, 0.15);
+    color: #a78bfa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-family: 'Courier New', monospace;
+}
+
+.bubble.assistant pre {
+    background: #0a0a14;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    overflow-x: auto;
+    margin: 10px 0;
+}
+
+.bubble.assistant pre code {
+    background: transparent;
+    color: #e0e0f0;
+    padding: 0;
+    font-size: 0.85rem;
+}
+
+.bubble.assistant blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    color: var(--text-muted);
+    margin: 8px 0;
+    font-style: italic;
+}
+
+.bubble.assistant table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 0.85rem;
+}
+
+.bubble.assistant th {
+    background: rgba(108, 99, 255, 0.15);
+    color: var(--accent);
+    padding: 8px 12px;
+    text-align: left;
+    border: 1px solid var(--border);
+}
+
+.bubble.assistant td {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    color: var(--text);
+}
+
+.bubble.assistant tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.bubble.assistant a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.bubble.assistant a:hover {
+    text-decoration: underline;
+}
+
+.bubble.assistant strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.bubble.assistant hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 12px 0;
+}
+
+/* Image upload button */
+#upload-btn {
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+#upload-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Image preview */
+#image-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+#preview-img {
+    height: 48px;
+    width: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+#image-preview button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    transition: color 0.2s;
+}
+
+#image-preview button:hover {
+    color: var(--accent-2);
+}
+
+/* Chat image */
+.chat-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* PDF chip in chat */
+.chat-pdf {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: inline-block;
+}
+
+/* Chat image */
+.chat-image {
+    max-width: 200px;
+    max-height: 200px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* Image preview */
+#image-preview {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+#preview-img {
+    height: 48px;
+    width: 48px;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+#preview-name {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+#image-preview button {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 4px;
+    margin-left: auto;
+    transition: color 0.2s;
+}
+
+#image-preview button:hover {
+    color: var(--accent-2);
+}
+
+/* Upload button */
+#upload-btn {
+    width: 38px;
+    height: 38px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+#upload-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
