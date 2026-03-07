@@ -1,33 +1,43 @@
 import requests
+import aiohttp
 from config.settings import MISTRAL_API_KEY
+
+URL = "https://api.mistral.ai/v1/chat/completions"
+HEADERS = {
+    "Authorization": f"Bearer {MISTRAL_API_KEY}",
+    "Content-Type": "application/json",
+}
 
 
 def generate(model_name, conversation):
-    if not MISTRAL_API_KEY:
-        return "Mistral API key not configured."
-
     try:
         response = requests.post(
-            "https://api.mistral.ai/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {MISTRAL_API_KEY}",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": model_name,
-                "messages": conversation,
-                "temperature": 0.7,
-            },
-            timeout=30,
+            URL,
+            headers=HEADERS,
+            json={"model": model_name,
+                  "messages": conversation, "max_tokens": 800},
+            timeout=10,
         )
-
-        response.raise_for_status()
         data = response.json()
-
         if "error" in data:
             return f"Mistral Error: {data['error']}"
-
         return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        return f"Mistral Error: {str(e)}"
 
-    except requests.exceptions.RequestException as e:
-        return f"Mistral Request Error: {str(e)}"
+
+async def async_generate(session, model_name, conversation):
+    try:
+        async with session.post(
+            URL,
+            headers=HEADERS,
+            json={"model": model_name,
+                  "messages": conversation, "max_tokens": 800},
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as response:
+            data = await response.json()
+            if "error" in data:
+                return None
+            return data["choices"][0]["message"]["content"][:600]
+    except Exception:
+        return None
