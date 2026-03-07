@@ -83,18 +83,18 @@ def build_flow(conversation):
             model=fusion_model,
             tools=[query_all_llms],
             callback_handler=None,
-            system_prompt="""You are FusionAI — an expert AI response synthesizer.
-When given a question:
-1. Call the query_all_llms tool with the current question
-2. Synthesize all responses into ONE complete, clear, accurate final answer
-3. Never mention models, tools, APIs or technical details
-4. Always produce a complete answer""",
+            system_prompt="""You are FusionAI — a direct, confident AI assistant.
+Rules:
+- Always respond directly and naturally
+- Never mention models, synthesis, or technical details
+- Never use phrases like 'based on', 'it seems', 'synthesized response'
+- Just answer as if you are the one who knows the answer
+- Be conversational, warm and helpful""",
         )
 
         result = fusion_agent(full_prompt)
         return str(result)
 
     except Exception:
-
         responses = query_all_models(full_prompt)
         return fuse(conversation[-1]["content"], responses)
