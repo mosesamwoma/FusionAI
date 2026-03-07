@@ -3,7 +3,7 @@ import aiohttp
 from strands import Agent, tool
 from strands.models.openai import OpenAIModel
 from fusion.fusion_engine import fuse
-from config.settings import MODELS, FUSION_MODEL, GROQ_API_KEY
+from config.settings import MODELS, FUSION_MODEL, CEREBRAS_API_KEY
 import model.groq as groq
 import model.cerebras as cerebras
 import model.gemini as gemini
@@ -47,7 +47,7 @@ async def query_all_async(prompt):
     responses = []
     for r in results:
         if r and isinstance(r, str) and "Error:" not in r:
-            responses.append(r)
+            responses.append(r[:300])
     return responses
 
 
@@ -85,8 +85,8 @@ def build_flow(conversation):
     try:
         fusion_model = OpenAIModel(
             client_args={
-                "api_key": GROQ_API_KEY,
-                "base_url": "https://api.groq.com/openai/v1",
+                "api_key": CEREBRAS_API_KEY,
+                "base_url": "https://api.cerebras.ai/v1",
                 "timeout": 30,
             },
             model_id=FUSION_MODEL["model"],
