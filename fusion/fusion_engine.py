@@ -15,17 +15,21 @@ def fuse(question, answers):
         return "All models failed to respond. Please try again."
 
     combined = "\n\n".join(
-        f"Answer {i+1}:\n{a[:200]}"
+        f"Answer {i+1}:\n{a[:800]}"  # increased from 200
         for i, a in enumerate(valid_answers)
     )
 
-    fusion_prompt = f"""
-Combine the answers below into one single direct response.
-No preamble. No meta-commentary. No mention of models or synthesis.
-Just answer directly as if you are the one answering.
+    fusion_prompt = f"""You are answering an exam or assignment question. Give complete, detailed, thorough answers.
+- Answer every single part fully using proper structure a), b), i), ii) etc
+- Include full working code examples with explanation where needed
+- Write in full sentences and paragraphs with depth
+- Define every term, explain every concept fully
+- Never cut off mid-answer
+- No intro, no outro, no disclaimers
 
 Question: {question}
 
+Reference answers:
 {combined}
 """
 
@@ -48,17 +52,21 @@ async def async_fuse(question, answers):
         return "All models failed to respond. Please try again."
 
     combined = "\n\n".join(
-        f"Answer {i+1}:\n{a[:200]}"
+        f"Answer {i+1}:\n{a[:800]}"  # increased from 200
         for i, a in enumerate(valid_answers)
     )
 
-    fusion_prompt = f"""
-Combine the answers below into one single direct response.
-No preamble. No meta-commentary. No mention of models or synthesis.
-Just answer directly as if you are the one answering.
+    fusion_prompt = f"""You are answering an exam or assignment question. Give complete, detailed, thorough answers.
+- Answer every single part fully using proper structure a), b), i), ii) etc
+- Include full working code examples with explanation where needed
+- Write in full sentences and paragraphs with depth
+- Define every term, explain every concept fully
+- Never cut off mid-answer
+- No intro, no outro, no disclaimers
 
 Question: {question}
 
+Reference answers:
 {combined}
 """
 
