@@ -46,6 +46,6 @@ MODELS = [
 ]
 
 FUSION_MODEL = {
-    "provider": "groq",
-    "model": "llama-3.1-8b-instant",
+    "provider": "cerebras",
+    "model": "llama3.1-8b",
 }
