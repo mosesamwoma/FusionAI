@@ -1,7 +1,7 @@
 import asyncio
 import aiohttp
 from model.client import generate, async_generate
-from config.settings import FUSION_MODEL, MODELS
+from config.settings import FUSION_MODEL
 
 
 def fuse(question, answers):
@@ -15,7 +15,7 @@ def fuse(question, answers):
         return "All models failed to respond. Please try again."
 
     combined = "\n\n".join(
-        f"Answer {i+1}:\n{a[:600]}"
+        f"Answer {i+1}:\n{a[:200]}"
         for i, a in enumerate(valid_answers)
     )
 
@@ -48,7 +48,7 @@ async def async_fuse(question, answers):
         return "All models failed to respond. Please try again."
 
     combined = "\n\n".join(
-        f"Answer {i+1}:\n{a[:600]}"
+        f"Answer {i+1}:\n{a[:200]}"
         for i, a in enumerate(valid_answers)
     )
 
