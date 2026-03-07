@@ -122,6 +122,7 @@ and solving complex problems across various fields.
 - Async requests for 30-50% speed improvement
 - Automatic conversation trimming
 - Graceful fallback if Strands fails
+- Markdown rendering in UI
 
 ## Future Improvements
 
@@ -129,7 +130,6 @@ and solving complex problems across various fields.
 - Deploy as a REST API
 - Support image and multimodal inputs
 - Voice input and output
-- Markdown rendering in UI
 - Support more AI providers (OpenAI, Anthropic, Together AI)
 - Response streaming for faster perceived speed
 - Multi-user support with authentication
