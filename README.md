@@ -4,10 +4,10 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 
 ## How It Works
 
-1. A user prompt is sent to all configured LLMs via Strands Agent tools
-2. Each model is registered as a `@tool` that the Strands Agent calls
-3. All responses are collected and passed to the Fusion Engine
-4. The Fusion Engine synthesizes them into one superior final answer
+1. A user prompt is sent to all configured LLMs in parallel using ThreadPoolExecutor
+2. A single Strands Agent `@tool` called `query_all_llms` handles all model queries
+3. The Strands Agent collects all responses and synthesizes them into one final answer
+4. Conversation history is maintained across turns with automatic trimming
 
 ## Models Used
 
@@ -20,7 +20,7 @@ A multi-model AI fusion system that queries multiple LLMs simultaneously and syn
 | Mistral | mistral-small-latest, open-mistral-7b |
 | Nvidia | meta/llama-3.1-8b-instruct, meta/llama-3.1-70b-instruct |
 | Cohere | command-a-03-2025 |
-| OpenRouter | gemma-3-12b-it:free, gemma-3-4b-it:free |
+| OpenRouter | gemma-3-12b-it, gemma-3-4b-it, llama-3.1-8b-instruct |
 
 ## Requirements
 
@@ -72,14 +72,22 @@ nvidia-70b: How can I assist you today?
 cohere-a: Hello! How can I assist you today?
 openrouter-gemma-12b: Hi there! How can I help you today?
 openrouter-gemma-4b: Hi there! How can I help you today?
+openrouter-llama: Hi there! How can I help you today?
 ```
 
 If a provider shows an error, check its API key in `.env`.
 
-## Run
+## Run CLI
 ```bash
 python main.py
 ```
+
+## Run Web App
+```bash
+python app.py
+```
+
+Then open **http://127.0.0.1:5000** in your browser.
 
 ## Usage Example
 ```
@@ -98,21 +106,16 @@ and solving complex problems across various fields.
 - Response time depends on the slowest model in the pool
 - API rate limits and daily quotas may affect availability
 - Failed or timed out models are skipped silently
-- No persistent memory — conversation resets on every run
+- Conversation history is trimmed to last 5 turns to avoid token limits
 - No streaming — response appears only after all models finish
 - Single user only — no multi-user or session support
-- Not optimized for long conversations or large prompts
 - Fusion quality depends on how many models respond successfully
 
 ## Future Improvements
 
-- Add a web UI (Flask)
-- Add chat history and memory across sessions
+- Add persistent memory across sessions
 - Support more AI providers (OpenAI, Anthropic, Together AI)
-- Allow users to select which models to include in the fusion
 - Deploy as a REST API
 - Support image and multimodal inputs
-- Add model performance tracking and analytics
-- Add parallel async requests for faster fusion
 - Add a Docker container for easy deployment
 - Support voice input and output
