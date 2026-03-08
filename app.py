@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify, render_template, session, Response, stream_with_context
 from flow.strand_flow import build_flow, build_flow_stream
+from flow.vision_flow import build_vision_flow
 import uuid
 import base64
 import requests
@@ -116,23 +117,22 @@ def process_image(file_bytes, image_mime):
     return None, image_data_b64, image_mime
 
 
-def prepare_message(request):
-    """Parse request and return user_message, image_data, image_mime, is_pdf."""
+def prepare_request(req):
+    """Parse request — returns message, image_data, image_mime, is_vision."""
     image_data = None
     image_mime = None
-    is_pdf = False
+    is_vision = False
 
-    if request.content_type and "multipart/form-data" in request.content_type:
-        user_message = request.form.get("message", "").strip()
+    if req.content_type and "multipart/form-data" in req.content_type:
+        user_message = req.form.get("message", "").strip()
 
-        if "image" in request.files:
-            file = request.files["image"]
+        if "image" in req.files:
+            file = req.files["image"]
             if file.filename:
-                image_mime = file.content_type
+                is_vision = True
                 file_bytes = file.read()
 
                 if file.content_type == "application/pdf":
-                    is_pdf = True
                     pdf_text = extract_pdf_text(file_bytes)
                     if pdf_text:
                         user_message = f"{user_message}\n\nDocument Content:\n{pdf_text}" if user_message else f"Document Content:\n{pdf_text}"
@@ -149,32 +149,33 @@ def prepare_message(request):
                         image_data = img_data
                         image_mime = img_mime
     else:
-        data = request.get_json()
+        data = req.get_json()
         user_message = data.get("message", "").strip()
         image_data = data.get("image_data")
         image_mime = data.get("image_mime")
 
-        if image_mime == "application/pdf" and image_data:
-            is_pdf = True
-            file_bytes = base64.b64decode(image_data)
-            pdf_text = extract_pdf_text(file_bytes)
-            if pdf_text:
-                user_message = f"{user_message}\n\nDocument Content:\n{pdf_text}" if user_message else f"Document Content:\n{pdf_text}"
-            image_data = None
-            image_mime = None
-        elif image_data and image_mime:
-            file_bytes = base64.b64decode(image_data)
-            ocr_text, img_data, img_mime = process_image(
-                file_bytes, image_mime)
-            if ocr_text:
-                user_message = f"{user_message}\n\nExtracted Content:\n{ocr_text}" if user_message else f"Extracted Content:\n{ocr_text}"
+        if image_data and image_mime:
+            is_vision = True
+            if image_mime == "application/pdf":
+                file_bytes = base64.b64decode(image_data)
+                pdf_text = extract_pdf_text(file_bytes)
+                if pdf_text:
+                    user_message = f"{user_message}\n\nDocument Content:\n{pdf_text}" if user_message else f"Document Content:\n{pdf_text}"
                 image_data = None
                 image_mime = None
             else:
-                image_data = img_data
-                image_mime = img_mime
+                file_bytes = base64.b64decode(image_data)
+                ocr_text, img_data, img_mime = process_image(
+                    file_bytes, image_mime)
+                if ocr_text:
+                    user_message = f"{user_message}\n\nExtracted Content:\n{ocr_text}" if user_message else f"Extracted Content:\n{ocr_text}"
+                    image_data = None
+                    image_mime = None
+                else:
+                    image_data = img_data
+                    image_mime = img_mime
 
-    return user_message, image_data, image_mime, is_pdf
+    return user_message, image_data, image_mime, is_vision
 
 
 @app.route("/")
@@ -186,7 +187,7 @@ def index():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    user_message, image_data, image_mime, is_pdf = prepare_message(request)
+    user_message, image_data, image_mime, is_vision = prepare_request(request)
 
     if not user_message:
         return jsonify({"error": "Empty message"}), 400
@@ -205,8 +206,16 @@ def chat():
         save_message(session_id, "user", user_message)
 
     try:
-        response = build_flow(
-            conversation, image_data=image_data, image_mime=image_mime)
+        if is_vision:
+            # Route to vision flow — images and PDFs
+            response = build_vision_flow(
+                conversation,
+                image_data=image_data,
+                image_mime=image_mime
+            )
+        else:
+            # Route to text flow — fastest path
+            response = build_flow(conversation)
     except Exception:
         response = "Something went wrong. Please try again."
 
@@ -218,51 +227,11 @@ def chat():
 
 @app.route("/chat/stream", methods=["POST"])
 def chat_stream():
-    """Streaming endpoint — for text and image queries only, not PDFs."""
-    user_message, image_data, image_mime, is_pdf = prepare_message(request)
+    user_message, image_data, image_mime, is_vision = prepare_request(request)
 
     if not user_message:
         return jsonify({"error": "Empty message"}), 400
 
-    # PDFs use normal non-streaming endpoint
-    if is_pdf:
-        session_id = session.get("session_id", str(uuid.uuid4()))
-        session["session_id"] = session_id
-
-        if MEMORY_ENABLED:
-            conversation = load_conversation(session_id)
-        else:
-            conversation = []
-
-        conversation.append({"role": "user", "content": user_message})
-
-        if MEMORY_ENABLED:
-            save_message(session_id, "user", user_message)
-
-        try:
-            response = build_flow(
-                conversation, image_data=image_data, image_mime=image_mime)
-        except Exception:
-            response = "Something went wrong. Please try again."
-
-        if MEMORY_ENABLED:
-            save_message(session_id, "assistant", response)
-
-        # Return as single chunk so frontend handles it the same way
-        def single_chunk():
-            yield f"data: {response}\n\n"
-            yield "data: [DONE]\n\n"
-
-        return Response(
-            stream_with_context(single_chunk()),
-            mimetype="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "X-Accel-Buffering": "no",
-            }
-        )
-
-    # Text and image — stream response
     session_id = session.get("session_id", str(uuid.uuid4()))
     session["session_id"] = session_id
 
@@ -280,13 +249,20 @@ def chat_stream():
 
     def generate():
         try:
-            for chunk in build_flow_stream(
-                conversation,
-                image_data=image_data,
-                image_mime=image_mime
-            ):
-                full_response.append(chunk)
-                yield f"data: {chunk}\n\n"
+            if is_vision:
+                # Vision — no streaming, return as single chunk
+                result = build_vision_flow(
+                    conversation,
+                    image_data=image_data,
+                    image_mime=image_mime
+                )
+                full_response.append(result)
+                yield f"data: {result}\n\n"
+            else:
+                # Text — stream chunks
+                for chunk in build_flow_stream(conversation):
+                    full_response.append(chunk)
+                    yield f"data: {chunk}\n\n"
         except Exception:
             yield "data: Something went wrong. Please try again.\n\n"
         finally:
