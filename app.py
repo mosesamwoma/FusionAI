@@ -121,6 +121,7 @@ def prepare_request(req):
     """Parse request — returns message, image_data, image_mime, is_vision."""
     image_data = None
     image_mime = None
+    # only True when we actually need vision models (raw image)
     is_vision = False
 
     if req.content_type and "multipart/form-data" in req.content_type:
@@ -129,25 +130,35 @@ def prepare_request(req):
         if "image" in req.files:
             file = req.files["image"]
             if file.filename:
-                is_vision = True
                 file_bytes = file.read()
 
                 if file.content_type == "application/pdf":
+                    # PDF: extract text, inject into message, use text flow
                     pdf_text = extract_pdf_text(file_bytes)
                     if pdf_text:
-                        user_message = f"{user_message}\n\nDocument Content:\n{pdf_text}" if user_message else f"Document Content:\n{pdf_text}"
-                    image_data = None
-                    image_mime = None
+                        user_message = (
+                            f"{user_message}\n\nDocument Content:\n{pdf_text}"
+                            if user_message
+                            else f"Document Content:\n{pdf_text}"
+                        )
+                    # is_vision stays False — text flow handles it
                 else:
+                    # Image: try OCR first
                     ocr_text, img_data, img_mime = process_image(
                         file_bytes, file.content_type)
                     if ocr_text:
-                        user_message = f"{user_message}\n\nExtracted Content:\n{ocr_text}" if user_message else f"Extracted Content:\n{ocr_text}"
-                        image_data = None
-                        image_mime = None
+                        # OCR succeeded — inject text, use text flow
+                        user_message = (
+                            f"{user_message}\n\nExtracted Content:\n{ocr_text}"
+                            if user_message
+                            else f"Extracted Content:\n{ocr_text}"
+                        )
+                        # is_vision stays False
                     else:
+                        # OCR failed — send raw image to vision models
                         image_data = img_data
                         image_mime = img_mime
+                        is_vision = True
     else:
         data = req.get_json()
         user_message = data.get("message", "").strip()
@@ -155,25 +166,35 @@ def prepare_request(req):
         image_mime = data.get("image_mime")
 
         if image_data and image_mime:
-            is_vision = True
             if image_mime == "application/pdf":
                 file_bytes = base64.b64decode(image_data)
                 pdf_text = extract_pdf_text(file_bytes)
                 if pdf_text:
-                    user_message = f"{user_message}\n\nDocument Content:\n{pdf_text}" if user_message else f"Document Content:\n{pdf_text}"
+                    user_message = (
+                        f"{user_message}\n\nDocument Content:\n{pdf_text}"
+                        if user_message
+                        else f"Document Content:\n{pdf_text}"
+                    )
                 image_data = None
                 image_mime = None
+                # is_vision stays False
             else:
                 file_bytes = base64.b64decode(image_data)
                 ocr_text, img_data, img_mime = process_image(
                     file_bytes, image_mime)
                 if ocr_text:
-                    user_message = f"{user_message}\n\nExtracted Content:\n{ocr_text}" if user_message else f"Extracted Content:\n{ocr_text}"
+                    user_message = (
+                        f"{user_message}\n\nExtracted Content:\n{ocr_text}"
+                        if user_message
+                        else f"Extracted Content:\n{ocr_text}"
+                    )
                     image_data = None
                     image_mime = None
+                    # is_vision stays False
                 else:
                     image_data = img_data
                     image_mime = img_mime
+                    is_vision = True
 
     return user_message, image_data, image_mime, is_vision
 
@@ -195,11 +216,7 @@ def chat():
     session_id = session.get("session_id", str(uuid.uuid4()))
     session["session_id"] = session_id
 
-    if MEMORY_ENABLED:
-        conversation = load_conversation(session_id)
-    else:
-        conversation = []
-
+    conversation = load_conversation(session_id) if MEMORY_ENABLED else []
     conversation.append({"role": "user", "content": user_message})
 
     if MEMORY_ENABLED:
@@ -207,14 +224,12 @@ def chat():
 
     try:
         if is_vision:
-            # Route to vision flow — images and PDFs
             response = build_vision_flow(
                 conversation,
                 image_data=image_data,
                 image_mime=image_mime
             )
         else:
-            # Route to text flow — fastest path
             response = build_flow(conversation)
     except Exception:
         response = "Something went wrong. Please try again."
@@ -235,11 +250,7 @@ def chat_stream():
     session_id = session.get("session_id", str(uuid.uuid4()))
     session["session_id"] = session_id
 
-    if MEMORY_ENABLED:
-        conversation = load_conversation(session_id)
-    else:
-        conversation = []
-
+    conversation = load_conversation(session_id) if MEMORY_ENABLED else []
     conversation.append({"role": "user", "content": user_message})
 
     if MEMORY_ENABLED:
@@ -250,20 +261,21 @@ def chat_stream():
     def generate():
         try:
             if is_vision:
-                # Vision — no streaming, return as single chunk
                 result = build_vision_flow(
                     conversation,
                     image_data=image_data,
                     image_mime=image_mime
                 )
+                if not result:
+                    result = "Something went wrong. Please try again."
                 full_response.append(result)
                 yield f"data: {result}\n\n"
             else:
-                # Text — stream chunks
                 for chunk in build_flow_stream(conversation):
                     full_response.append(chunk)
                     yield f"data: {chunk}\n\n"
-        except Exception:
+        except Exception as e:
+            print(f"Stream error: {e}")
             yield "data: Something went wrong. Please try again.\n\n"
         finally:
             yield "data: [DONE]\n\n"
