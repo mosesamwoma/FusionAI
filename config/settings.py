@@ -15,11 +15,12 @@ COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 MODELS = [
-    # Groq
+    # Groq — fastest inference
     {"provider": "groq", "model": "llama-3.1-8b-instant", "vision": False},
     {"provider": "groq", "model": "llama-3.3-70b-versatile", "vision": False},
-    # Cerebras
+    # Cerebras — ultra fast
     {"provider": "cerebras", "model": "llama3.1-8b", "vision": False},
+    {"provider": "cerebras", "model": "llama-3.3-70b", "vision": False},
     # Gemini
     {"provider": "gemini", "model": "gemini-2.5-flash", "vision": True},
     # SambaNova
@@ -42,5 +43,5 @@ MODELS = [
 
 FUSION_MODEL = {
     "provider": "cerebras",
-    "model": "llama3.3-70b",
+    "model": "llama-3.3-70b",
 }
