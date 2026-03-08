@@ -21,13 +21,19 @@ def generate(model_name, conversation, image_data=None, image_mime=None):
                   "messages": conversation, "max_tokens": 1000},
             timeout=30,
         )
-        data = response.json()
+        # Parse safely
+        try:
+            data = response.json()
+        except Exception:
+            return None
+
+        if not isinstance(data, dict):
+            return None
         if "error" in data:
             return f"Cerebras Error: {data['error']}"
-        # Handle both response formats
         if "choices" in data and data["choices"]:
             return data["choices"][0]["message"]["content"]
-        if "message" in data:
+        if "message" in data and isinstance(data["message"], dict):
             return data["message"].get("content", "")
         return None
     except Exception as e:
@@ -43,13 +49,19 @@ async def async_generate(session, model_name, conversation, image_data=None, ima
                   "messages": conversation, "max_tokens": 1000},
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
-            data = await response.json()
+            # Parse safely
+            try:
+                data = await response.json(content_type=None)
+            except Exception:
+                return None
+
+            if not isinstance(data, dict):
+                return None
             if "error" in data:
                 return None
-            # Handle both response formats
             if "choices" in data and data["choices"]:
                 return data["choices"][0]["message"]["content"][:10000]
-            if "message" in data:
+            if "message" in data and isinstance(data["message"], dict):
                 return data["message"].get("content", "")[:10000]
             return None
     except Exception:
