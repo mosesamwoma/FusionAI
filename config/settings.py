@@ -20,7 +20,6 @@ MODELS = [
     {"provider": "groq", "model": "llama-3.3-70b-versatile", "vision": False},
     # Cerebras — ultra fast
     {"provider": "cerebras", "model": "llama3.1-8b", "vision": False},
-    {"provider": "cerebras", "model": "llama-3.3-70b", "vision": False},
     # Gemini
     {"provider": "gemini", "model": "gemini-2.5-flash", "vision": True},
     # SambaNova
@@ -43,5 +42,5 @@ MODELS = [
 
 FUSION_MODEL = {
     "provider": "cerebras",
-    "model": "llama-3.3-70b",
+    "model": "llama3.1-8b",
 }
