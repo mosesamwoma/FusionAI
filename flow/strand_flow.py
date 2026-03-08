@@ -67,7 +67,6 @@ def clean_response(text):
     text = re.sub(
         r'\{[^{}]*"name"\s*:\s*"query_all_llms"[^{}]*\}', '', text, flags=re.DOTALL)
     text = re.sub(r'```json.*?```', '', text, flags=re.DOTALL)
-    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
     for phrase in LEAKED_PHRASES:
         text = text.replace(phrase, "")
     text = re.sub(r'\n{3,}', '\n\n', text)
@@ -114,15 +113,17 @@ async def cerebras_fuse_async(session, question, responses):
     pre = pre_fuse(responses)
     combined = "\n\n".join(f"Group {i+1}:\n{r}" for i, r in enumerate(pre))
 
-    fusion_prompt = f"""You are FusionAI, a helpful AI assistant. Synthesize the reference answers into one natural response.
+    fusion_prompt = f"""You are FusionAI, a helpful AI assistant. Synthesize the reference answers into one natural, well-formatted response.
 
 RULES:
 - For casual conversation (greetings, small talk) — respond naturally and briefly
 - For technical or academic questions — be detailed and structured
-- For questions with multiple parts — use proper structure a), b), i), ii) etc
-- Include code examples only when relevant
+- For document or exam content — preserve the original structure, use proper headings, numbered lists, and code blocks where appropriate
+- For questions with multiple parts — use proper markdown: ##, ###, **, -, 1. 2. 3.
+- Use markdown code blocks (```java, ```python etc) for all code
 - Never cut off mid-answer
-- No intro, no outro, no disclaimers
+- No intro like "Here is..." or "Sure!" — go straight to the answer
+- No outro, no disclaimers
 - Match the tone to the question
 
 Question: {question}
@@ -151,6 +152,7 @@ Reference answers:
                 print(f"Cerebras JSON parse error: {e}")
                 return None
             if not isinstance(data, dict):
+                print(f"Cerebras unexpected type: {type(data)}")
                 return None
             if "error" in data:
                 print(f"Cerebras API error: {data['error']}")
