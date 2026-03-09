@@ -34,5 +34,5 @@ MODELS = [
 
 FUSION_MODEL = {
     "provider": "cerebras",
-    "model": "llama-3.3-70b",
+    "model": "llama3.1-8b",
 }

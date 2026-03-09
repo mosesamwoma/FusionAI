@@ -2,7 +2,7 @@ import asyncio
 import aiohttp
 import re
 from config.settings import MODELS, CEREBRAS_API_KEY
-from fusion.fusion_engine import fuse
+from fusion.fusion_engine import fuse, algorithmic_fuse
 import model.groq as groq
 import model.cerebras as cerebras
 import model.gemini as gemini
@@ -98,20 +98,8 @@ async def query_all_async(session, prompt):
     return responses
 
 
-def pre_fuse(responses):
-    if len(responses) <= 4:
-        return responses
-    chunks = [responses[i:i+4] for i in range(0, len(responses), 4)]
-    merged = []
-    for chunk in chunks:
-        combined = " | ".join(chunk)
-        merged.append(combined[:4000])
-    return merged
-
-
 async def cerebras_fuse_async(session, question, responses):
-    pre = pre_fuse(responses)
-    combined = "\n\n".join(f"Group {i+1}:\n{r}" for i, r in enumerate(pre))
+    pre_filtered = algorithmic_fuse(responses)
 
     fusion_prompt = f"""You are FusionAI, a helpful AI assistant. Synthesize the reference answers into one natural, well-formatted response.
 
@@ -129,7 +117,7 @@ RULES:
 Question: {question}
 
 Reference answers:
-{combined}"""
+{pre_filtered}"""
 
     try:
         async with session.post(
@@ -139,7 +127,7 @@ Reference answers:
                 "Content-Type": "application/json",
             },
             json={
-                "model": "llama-3.3-70b",
+                "model": "llama3.1-8b",
                 "messages": [{"role": "user", "content": fusion_prompt}],
                 "max_tokens": 8192,
                 "temperature": 0.7,
