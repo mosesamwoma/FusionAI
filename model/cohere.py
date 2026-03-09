@@ -1,70 +1,83 @@
 import requests
 import aiohttp
-from config.settings import OPENROUTER_API_KEY
+from config.settings import COHERE_API_KEY
 
-URL = "https://openrouter.ai/api/v1/chat/completions"
+URL = "https://api.cohere.com/v2/chat"
 
 
 def get_headers():
     return {
-        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+        "Authorization": f"Bearer {COHERE_API_KEY}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://fusionai.app",
-        "X-Title": "FusionAI",
     }
 
 
 def generate(model_name, conversation, image_data=None, image_mime=None):
     try:
-        messages = []
-        for m in conversation:
-            if image_data and m == conversation[-1] and "vision" in model_name:
-                content = [
-                    {"type": "text", "text": m["content"]},
-                    {"type": "image_url", "image_url": {
-                        "url": f"data:{image_mime or 'image/jpeg'};base64,{image_data}"}}
-                ]
-            else:
-                content = m["content"]
-            messages.append({"role": m["role"], "content": content})
+        messages = [{"role": m["role"], "content": m["content"]}
+                    for m in conversation]
 
         response = requests.post(
             URL,
             headers=get_headers(),
-            json={"model": model_name, "messages": messages, "max_tokens": 8000},
+            json={
+                "model": model_name,
+                "messages": messages,
+                "max_tokens": 8000,
+            },
             timeout=30,
         )
         data = response.json()
+
         if "error" in data:
-            return f"OpenRouter Error: {data['error']}"
-        return data["choices"][0]["message"]["content"]
+            return f"Cohere Error: {data['error']}"
+
+        message = data.get("message", {})
+        content = message.get("content", [])
+        if content and isinstance(content, list):
+            return content[0].get("text", "")
+
+        if "text" in data:
+            return data["text"]
+
+        return f"Cohere Error: Unexpected response format: {data}"
+
     except Exception as e:
-        return f"OpenRouter Error: {str(e)}"
+        return f"Cohere Error: {str(e)}"
 
 
 async def async_generate(session, model_name, conversation, image_data=None, image_mime=None):
     try:
-        messages = []
-        for m in conversation:
-            if image_data and m == conversation[-1] and "vision" in model_name:
-                content = [
-                    {"type": "text", "text": m["content"]},
-                    {"type": "image_url", "image_url": {
-                        "url": f"data:{image_mime or 'image/jpeg'};base64,{image_data}"}}
-                ]
-            else:
-                content = m["content"]
-            messages.append({"role": m["role"], "content": content})
+        messages = [{"role": m["role"], "content": m["content"]}
+                    for m in conversation]
 
         async with session.post(
             URL,
             headers=get_headers(),
-            json={"model": model_name, "messages": messages, "max_tokens": 8000},
+            json={
+                "model": model_name,
+                "messages": messages,
+                "max_tokens": 8000,
+            },
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
-            data = await response.json()
+            data = await response.json(content_type=None)
+
             if "error" in data:
+                print(f"Cohere API error: {data['error']}")
                 return None
-            return data["choices"][0]["message"]["content"][:10000]
-    except Exception:
+
+            message = data.get("message", {})
+            content = message.get("content", [])
+            if content and isinstance(content, list):
+                return content[0].get("text", "")[:10000]
+
+            if "text" in data:
+                return data["text"][:10000]
+
+            print(f"Cohere unknown format: {data}")
+            return None
+
+    except Exception as e:
+        print(f"Cohere async error: {e}")
         return None
