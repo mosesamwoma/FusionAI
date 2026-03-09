@@ -123,15 +123,15 @@ and solving complex problems across various fields.
 - Automatic conversation trimming
 - Graceful fallback if Strands fails
 - Markdown rendering in UI
+- Support image and multimodal inputs
+- Database migration and management tools
 
 ## Future Improvements
 
 - Docker container for easy deployment
 - Deploy as a REST API
-- Support image and multimodal inputs
 - Voice input and output
-- Support more AI providers (OpenAI, Anthropic, Together AI)
+- Support more AI providers (OpenAI, Anthropic, Together AI,etc)
 - Response streaming for faster perceived speed
 - Multi-user support with authentication
-- Database migration and management tools
 - User profiles with personalized memory
