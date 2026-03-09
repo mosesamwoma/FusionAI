@@ -15,24 +15,16 @@ COHERE_API_KEY = os.getenv("COHERE_API_KEY")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 MODELS = [
-    # Groq — fastest inference
     {"provider": "groq", "model": "llama-3.1-8b-instant", "vision": False},
     {"provider": "groq", "model": "llama-3.3-70b-versatile", "vision": False},
-    # Cerebras — ultra fast
     {"provider": "cerebras", "model": "llama3.1-8b", "vision": False},
-    # Gemini
     {"provider": "gemini", "model": "gemini-2.5-flash", "vision": True},
-    # SambaNova
     {"provider": "sambanova", "model": "Meta-Llama-3.1-8B-Instruct", "vision": False},
-    # Mistral
     {"provider": "mistral", "model": "mistral-small-latest", "vision": True},
     {"provider": "mistral", "model": "open-mistral-7b", "vision": False},
-    # Nvidia
     {"provider": "nvidia", "model": "meta/llama-3.1-8b-instruct", "vision": False},
     {"provider": "nvidia", "model": "meta/llama-3.1-70b-instruct", "vision": False},
-    # Cohere
-    {"provider": "cohere", "model": "command-r-plus", "vision": False},
-    # OpenRouter
+    {"provider": "cohere", "model": "command-a-03-2025", "vision": False},
     {"provider": "openrouter",
         "model": "meta-llama/llama-3.2-11b-vision-instruct:free", "vision": True},
     {"provider": "openrouter", "model": "google/gemma-3-4b-it:free", "vision": False},
