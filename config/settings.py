@@ -31,7 +31,7 @@ MODELS = [
     {"provider": "nvidia", "model": "meta/llama-3.1-8b-instruct", "vision": False},
     {"provider": "nvidia", "model": "meta/llama-3.1-70b-instruct", "vision": False},
     # Cohere
-    {"provider": "cohere", "model": "command-a-03-2025", "vision": False},
+    {"provider": "cohere", "model": "command-r-plus", "vision": False},
     # OpenRouter
     {"provider": "openrouter",
         "model": "meta-llama/llama-3.2-11b-vision-instruct:free", "vision": True},
