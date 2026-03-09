@@ -90,21 +90,19 @@ async def groq_ocr_async(session, image_data, image_mime):
             },
             json={
                 "model": "llama-3.2-11b-vision-preview",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {"url": f"data:{image_mime};base64,{image_data}"}
-                            },
-                            {
-                                "type": "text",
-                                "text": "Extract ALL text from this image exactly as it appears. Preserve all formatting, numbering, and structure. Return only the extracted text, nothing else."
-                            }
-                        ]
-                    }
-                ],
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{image_mime};base64,{image_data}"}
+                        },
+                        {
+                            "type": "text",
+                            "text": "Extract ALL text from this image exactly as it appears. Preserve all formatting, numbering, and structure. Return only the extracted text, nothing else."
+                        }
+                    ]
+                }],
                 "max_tokens": 4000,
             },
             timeout=aiohttp.ClientTimeout(total=15),
@@ -134,21 +132,19 @@ async def sambanova_ocr_async(session, image_data, image_mime):
             },
             json={
                 "model": "Llama-3.2-11B-Vision-Instruct",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": {"url": f"data:{image_mime};base64,{image_data}"}
-                            },
-                            {
-                                "type": "text",
-                                "text": "Extract ALL text from this image exactly as it appears. Preserve all formatting, numbering, and structure. Return only the extracted text, nothing else."
-                            }
-                        ]
-                    }
-                ],
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": f"data:{image_mime};base64,{image_data}"}
+                        },
+                        {
+                            "type": "text",
+                            "text": "Extract ALL text from this image exactly as it appears. Preserve all formatting, numbering, and structure. Return only the extracted text, nothing else."
+                        }
+                    ]
+                }],
                 "max_tokens": 4000,
             },
             timeout=aiohttp.ClientTimeout(total=15),
@@ -239,7 +235,7 @@ Reference answers:
                 "Content-Type": "application/json",
             },
             json={
-                "model": "llama3.1-8b",
+                "model": "llama-3.3-70b",
                 "messages": [{"role": "user", "content": fusion_prompt}],
                 "max_tokens": 8192,
                 "temperature": 0.7,
@@ -251,7 +247,6 @@ Reference answers:
             except Exception as e:
                 print(f"Cerebras JSON parse error: {e}")
                 return None
-
             if not isinstance(data, dict):
                 print(f"Cerebras unexpected type: {type(data)}")
                 return None
@@ -264,7 +259,6 @@ Reference answers:
             if "message" in data and isinstance(data["message"], dict):
                 content = data["message"].get("content", "")
                 return content if content else None
-
             print(f"Cerebras unknown format: {data}")
             return None
     except Exception as e:
@@ -275,14 +269,15 @@ Reference answers:
 async def run_vision_pipeline(prompt, question, image_data=None, image_mime=None):
     async with aiohttp.ClientSession() as session:
         if image_data:
+            # Run OCR and model queries in TRUE parallel — never re-query after OCR
             ocr_task = groq_ocr_async(session, image_data, image_mime)
             query_task = query_all_async(
                 session, prompt, image_data, image_mime)
             ocr_text, responses = await asyncio.gather(ocr_task, query_task)
 
+            # Just append OCR text as one more response — no second query_all_async call
             if ocr_text:
-                enriched = f"{prompt}\n\nExtracted Content:\n{ocr_text}"
-                responses = await query_all_async(session, enriched)
+                responses.append(ocr_text[:800])
         else:
             responses = await query_all_async(session, prompt)
 

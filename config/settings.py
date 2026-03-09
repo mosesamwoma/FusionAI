@@ -17,7 +17,7 @@ OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 MODELS = [
     {"provider": "groq", "model": "llama-3.1-8b-instant", "vision": False},
     {"provider": "groq", "model": "llama-3.3-70b-versatile", "vision": False},
-    {"provider": "cerebras", "model": "llama3.1-8b", "vision": False},
+    {"provider": "cerebras", "model": "llama-3.3-70b", "vision": False},
     {"provider": "gemini", "model": "gemini-2.5-flash", "vision": True},
     {"provider": "sambanova", "model": "Meta-Llama-3.1-8B-Instruct", "vision": False},
     {"provider": "mistral", "model": "mistral-small-latest", "vision": True},
@@ -34,5 +34,5 @@ MODELS = [
 
 FUSION_MODEL = {
     "provider": "cerebras",
-    "model": "llama3.1-8b",
+    "model": "llama-3.3-70b",
 }

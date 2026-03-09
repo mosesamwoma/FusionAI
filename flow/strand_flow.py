@@ -139,7 +139,7 @@ Reference answers:
                 "Content-Type": "application/json",
             },
             json={
-                "model": "llama3.1-8b",
+                "model": "llama-3.3-70b",
                 "messages": [{"role": "user", "content": fusion_prompt}],
                 "max_tokens": 8192,
                 "temperature": 0.7,
