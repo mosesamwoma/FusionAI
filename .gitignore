@@ -3,3 +3,4 @@ docs.pdf
 __pycache__/
 .venv/
 fusion_v_env/
+*.db
