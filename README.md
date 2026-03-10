@@ -1,6 +1,6 @@
 # FusionAI
 
-A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesizes their responses into one superior answer using a hybrid algorithmic and neural fusion pipeline.
+A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesizes their responses into one superior answer using a hybrid algorithmic + neural fusion pipeline.
 
 ## Interface
 
@@ -147,3 +147,20 @@ Originally designed by Google, it is now maintained by the Cloud Native Computin
 - Support more providers (OpenAI, Anthropic, Together AI, etc)
 - Multi-user support with authentication
 - User profiles with personalized memory
+
+## Contributing
+
+Contributions are welcome! Here's how:
+
+1. **Star** this repo if you find it useful ⭐
+2. **Fork** the repo
+3. Create a new branch: `git checkout -b feature/your-feature`
+4. Make your changes and commit: `git commit -m "Add your feature"`
+5. Push to your branch: `git push origin feature/your-feature`
+6. Open a **Pull Request**
+
+## Support
+
+If you find FusionAI useful, please consider giving it a ⭐ on GitHub — it helps others discover the project.
+
+🔗 https://github.com/mosesamwoma/FusionAI
