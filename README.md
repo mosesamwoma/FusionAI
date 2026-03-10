@@ -107,7 +107,7 @@ Then open **http://127.0.0.1:5000** in your browser.
 
 ## Usage Example
 ```
-You: what is kuberntaes
+You: what is kuberntaes?
 
 Kubernetes (also known as K8s) is an open-source container orchestration 
 system for automating the deployment, scaling, and management of containerized applications.
