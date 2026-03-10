@@ -1,32 +1,31 @@
 # FusionAI
 
-A multi-model AI fusion system that queries multiple LLMs simultaneously and synthesizes their responses into one superior answer using [Strands Agents](https://github.com/strands-agents/sdk-python).
+A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesizes their responses into one superior answer using a hybrid algorithmic + neural fusion pipeline.
 
 ## How It Works
 
 1. A user prompt is sent to all 13 configured LLMs in parallel using `asyncio` + `aiohttp`
-2. A Strands Agent `@tool` called `query_all_llms` handles all async model queries
-3. The Strands Agent collects all responses and synthesizes them into one final answer
-4. Automatic conversation trimming prevents token limit issues
+2. Responses are collected with a 15-second hard cap — any model that doesn't respond in time is skipped
+3. Responses are scored using ROUGE-L + Weighted Voting + MMR — high-agreement content scores higher, hallucinations and outliers get buried
+4. Top-ranked sentences are passed to Groq `llama-3.3-70b-versatile` for final synthesis
+5. Groq streams tokens back to the user in real time — first words appear within ~1 second of fusion starting
+6. Repeated questions are served instantly from a 24-hour in-memory cache
+7. If Groq fusion fails, the algorithmic output is returned directly as fallback
 
 ## Models Used
 
 | Provider | Models |
 |----------|--------|
 | Groq | llama-3.1-8b-instant, llama-3.3-70b-versatile |
-| Cerebras | llama3.1-8b |
+| Cerebras | llama-3.3-70b |
 | Gemini | gemini-2.5-flash |
 | SambaNova | Meta-Llama-3.1-8B-Instruct |
 | Mistral | mistral-small-latest, open-mistral-7b |
 | Nvidia | meta/llama-3.1-8b-instruct, meta/llama-3.1-70b-instruct |
 | Cohere | command-a-03-2025 |
-| OpenRouter | gemma-3-12b-it, gemma-3-4b-it, llama-3.1-8b-instruct |
+| OpenRouter | llama-3.2-11b-vision-instruct, gemma-3-4b-it, llama-3.1-8b-instruct |
 
-## Requirements
-
-- Python 3.11+
-- Strands Agents SDK
-- aiohttp
+**Fusion model:** Groq `llama-3.3-70b-versatile` (streaming)
 
 ## Configuration
 
@@ -63,15 +62,15 @@ Expected output:
 ```
 groq-8b: How can I assist you today?
 groq-70b: It's nice to meet you. Is there something I can help you with
-cerebras-8b: How can I assist you today?
+cerebras-70b: How can I assist you today?
 gemini-2.5: Hi there! How can I help you today?
 sambanova-8b: How can I assist you today?
-mistral-small: Hello! 😊 How can I help you today?
-mistral-7b: Hello! 😊 How can I help you today?
+mistral-small: Hello! How can I help you today?
+mistral-7b: Hello! How can I help you today?
 nvidia-8b: How can I assist you today?
 nvidia-70b: How can I assist you today?
 cohere-a: Hello! How can I assist you today?
-openrouter-gemma-12b: Hi there! How can I help you today?
+openrouter-llama-vision: Hi there! How can I help you today?
 openrouter-gemma-4b: Hi there! How can I help you today?
 openrouter-llama: Hi there! How can I help you today?
 ```
@@ -104,34 +103,34 @@ and solving complex problems across various fields.
 
 > ⚠️ This project is experimental and not production-ready.
 
-- Response time depends on the slowest API provider
+- Response time depends on the slowest API provider (hard capped at 15 seconds)
 - API rate limits and daily quotas may affect availability
 - Failed or timed out models are skipped silently
-- Conversation history trimmed to last 5 turns to avoid token limits
-- No streaming — response appears only after all models finish
+- Conversation history trimmed to last 3 turns to avoid token limits
 - Single user only — no multi-user support yet
 - Fusion quality depends on how many models respond successfully
 
 ## Completed Features
 
-- 13 models queried in parallel using asyncio
-- Strands Agent for intelligent response fusion
+- 13 models queried in parallel using asyncio + aiohttp
+- 15-second hard timeout — no single slow provider can block the response
+- Real token streaming — words appear as Groq generates them
+- 24-hour response cache — repeated questions answered instantly
+- Algorithmic fallback if neural fusion fails
 - Flask web UI with modern dark theme
 - CLI interface
-- Chat history persisted across sessions
-- Async requests for 30-50% speed improvement
+- Chat history persisted across sessions via SQLite
+- OCR pipeline for images (Groq vision → SambaNova fallback)
+- PDF text extraction via PyMuPDF
+- Vision pipeline for raw image inputs
 - Automatic conversation trimming
-- Graceful fallback if Strands fails
 - Markdown rendering in UI
-- Support image and multimodal inputs
-- Database migration and management tools
 
 ## Future Improvements
 
 - Docker container for easy deployment
 - Deploy as a REST API
 - Voice input and output
-- Support more AI providers (OpenAI, Anthropic, Together AI,etc)
-- Response streaming for faster perceived speed
+- Support more providers (OpenAI, Anthropic, Together AI, etc)
 - Multi-user support with authentication
 - User profiles with personalized memory
