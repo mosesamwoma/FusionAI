@@ -2,6 +2,10 @@
 
 A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesizes their responses into one superior answer using a hybrid algorithmic + neural fusion pipeline.
 
+## Interface
+
+![FusionAI Interface](screenshort/123.png)
+
 ## How It Works
 
 1. A user prompt is sent to all 13 configured LLMs in parallel using `asyncio` + `aiohttp`
@@ -17,13 +21,13 @@ A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesiz
 | Provider | Models |
 |----------|--------|
 | Groq | llama-3.1-8b-instant, llama-3.3-70b-versatile |
-| Cerebras | llama-3.3-70b |
+| Cerebras | llama3.1-8b |
 | Gemini | gemini-2.5-flash |
 | SambaNova | Meta-Llama-3.1-8B-Instruct |
 | Mistral | mistral-small-latest, open-mistral-7b |
 | Nvidia | meta/llama-3.1-8b-instruct, meta/llama-3.1-70b-instruct |
 | Cohere | command-a-03-2025 |
-| OpenRouter | llama-3.2-11b-vision-instruct, gemma-3-4b-it, llama-3.1-8b-instruct |
+| OpenRouter | google/gemma-3-12b-it, google/gemma-3-4b-it, meta-llama/llama-3.1-8b-instruct |
 
 **Fusion model:** Groq `llama-3.3-70b-versatile` (streaming)
 
@@ -41,19 +45,31 @@ COHERE_API_KEY=your_cohere_key
 OPENROUTER_API_KEY=your_openrouter_key
 ```
 
-## Activate Environment
+## Run with Docker (recommended)
+```bash
+docker compose up --build
+```
+
+Then open **http://localhost:5000** in your browser.
+
+To stop:
+```bash
+docker compose down
+```
+
+## Run Locally
+
+**Activate environment:**
 ```bash
 .venv\Scripts\Activate.ps1
 ```
 
-## Install Dependencies
+**Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-## Test Providers
-
-Before running the app, verify all APIs are working:
+**Test all providers:**
 ```bash
 python test_providers.py
 ```
@@ -62,7 +78,7 @@ Expected output:
 ```
 groq-8b: How can I assist you today?
 groq-70b: It's nice to meet you. Is there something I can help you with
-cerebras-70b: How can I assist you today?
+cerebras-8b: How can I assist you today?
 gemini-2.5: Hi there! How can I help you today?
 sambanova-8b: How can I assist you today?
 mistral-small: Hello! How can I help you today?
@@ -70,19 +86,12 @@ mistral-7b: Hello! How can I help you today?
 nvidia-8b: How can I assist you today?
 nvidia-70b: How can I assist you today?
 cohere-a: Hello! How can I assist you today?
-openrouter-llama-vision: Hi there! How can I help you today?
+openrouter-gemma-12b: Hi there! How can I help you today?
 openrouter-gemma-4b: Hi there! How can I help you today?
 openrouter-llama: Hi there! How can I help you today?
 ```
 
-If a provider shows an error, check its API key in `.env`.
-
-## Run CLI
-```bash
-python main.py
-```
-
-## Run Web App
+**Run web app:**
 ```bash
 python app.py
 ```
@@ -110,25 +119,8 @@ and solving complex problems across various fields.
 - Single user only — no multi-user support yet
 - Fusion quality depends on how many models respond successfully
 
-## Completed Features
-
-- 13 models queried in parallel using asyncio + aiohttp
-- 15-second hard timeout — no single slow provider can block the response
-- Real token streaming — words appear as Groq generates them
-- 24-hour response cache — repeated questions answered instantly
-- Algorithmic fallback if neural fusion fails
-- Flask web UI with modern dark theme
-- CLI interface
-- Chat history persisted across sessions via SQLite
-- OCR pipeline for images (Groq vision → SambaNova fallback)
-- PDF text extraction via PyMuPDF
-- Vision pipeline for raw image inputs
-- Automatic conversation trimming
-- Markdown rendering in UI
-
 ## Future Improvements
 
-- Docker container for easy deployment
 - Deploy as a REST API
 - Voice input and output
 - Support more providers (OpenAI, Anthropic, Together AI, etc)
