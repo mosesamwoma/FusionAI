@@ -1,8 +1,9 @@
 import asyncio
 import aiohttp
 import re
+import json
 from config.settings import MODELS, CEREBRAS_API_KEY, GROQ_API_KEY, SAMBANOVA_API_KEY
-from fusion.fusion_engine import fuse, algorithmic_fuse
+from fusion.fusion_engine import fuse, algorithmic_fuse, is_code_question, has_code_blocks, cache_get, cache_set
 import model.groq as groq
 import model.cerebras as cerebras
 import model.gemini as gemini
@@ -13,6 +14,8 @@ import model.cohere as cohere
 import model.openrouter as openrouter
 
 MAX_HISTORY_TURNS = 3
+MIN_RESPONSES = 13
+COLLECT_TIMEOUT = 15
 
 ASYNC_PROVIDERS = {
     "groq": groq,
@@ -67,7 +70,6 @@ def clean_response(text):
     text = re.sub(
         r'\{[^{}]*"name"\s*:\s*"query_all_llms"[^{}]*\}', '', text, flags=re.DOTALL)
     text = re.sub(r'```json.*?```', '', text, flags=re.DOTALL)
-    text = re.sub(r'```.*?```', '', text, flags=re.DOTALL)
     for phrase in LEAKED_PHRASES:
         text = text.replace(phrase, "")
     text = re.sub(r'\n{3,}', '\n\n', text)
@@ -164,39 +166,122 @@ async def sambanova_ocr_async(session, image_data, image_mime):
         return None
 
 
-async def query_all_async(session, prompt, image_data=None, image_mime=None):
+async def collect_all_responses(session, prompt, image_data=None, image_mime=None):
     conversation = [{"role": "user", "content": prompt}]
-    tasks = []
+    responses = []
+    ready = asyncio.Event()
 
-    for m in MODELS:
-        if m["provider"] not in ASYNC_PROVIDERS:
-            continue
-        if m.get("vision") and image_data:
-            tasks.append(
-                ASYNC_PROVIDERS[m["provider"]].async_generate(
-                    session, m["model"], conversation,
+    async def fetch_one(provider_module, model_name, is_vision_model):
+        try:
+            if is_vision_model and image_data:
+                result = await provider_module.async_generate(
+                    session, model_name, conversation,
                     image_data=image_data,
                     image_mime=image_mime
                 )
-            )
-        else:
-            tasks.append(
-                ASYNC_PROVIDERS[m["provider"]].async_generate(
-                    session, m["model"], conversation
+            else:
+                result = await provider_module.async_generate(
+                    session, model_name, conversation
                 )
-            )
+            if result and isinstance(result, str) and "Error:" not in result:
+                responses.append(result[:800])
+                if len(responses) >= MIN_RESPONSES:
+                    ready.set()
+        except Exception:
+            pass
 
-    results = await asyncio.gather(*tasks, return_exceptions=True)
+    tasks = [
+        asyncio.create_task(
+            fetch_one(ASYNC_PROVIDERS[m["provider"]],
+                      m["model"], m.get("vision", False))
+        )
+        for m in MODELS if m["provider"] in ASYNC_PROVIDERS
+    ]
 
-    responses = []
-    for r in results:
-        if r and isinstance(r, str) and "Error:" not in r:
-            responses.append(r[:800])
+    try:
+        await asyncio.wait_for(ready.wait(), timeout=COLLECT_TIMEOUT)
+    except asyncio.TimeoutError:
+        pass
+
+    for t in tasks:
+        if not t.done():
+            t.cancel()
+
+    print(f"Vision got {len(responses)} responses")
     return responses
 
 
-async def cerebras_fuse_async(session, question, responses):
-    pre_filtered = algorithmic_fuse(responses)
+async def groq_fuse_stream(session, question, responses):
+    if is_code_question(question) or has_code_blocks(responses):
+        pre_filtered = "\n\n".join(
+            f"Answer {i+1}:\n{r[:800]}" for i, r in enumerate(responses))
+    else:
+        pre_filtered = algorithmic_fuse(responses)
+
+    fusion_prompt = f"""You are FusionAI, a helpful AI assistant. Synthesize the reference answers into one natural response.
+
+RULES:
+- For casual conversation (greetings, small talk) — respond naturally and briefly
+- For technical or academic questions — be detailed and structured
+- For document or image content — extract and answer all questions thoroughly
+- For questions with multiple parts — use proper structure a), b), i), ii) etc
+- Include code examples only when relevant
+- Never cut off mid-answer
+- No intro, no outro, no disclaimers
+- Match the tone to the question
+
+Question: {question}
+
+Reference answers:
+{pre_filtered}"""
+
+    full_response = []
+
+    try:
+        async with session.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "llama-3.3-70b-versatile",
+                "messages": [{"role": "user", "content": fusion_prompt}],
+                "max_tokens": 8192,
+                "temperature": 0.7,
+                "stream": True,
+            },
+            timeout=aiohttp.ClientTimeout(total=120),
+        ) as response:
+            async for line in response.content:
+                line = line.decode("utf-8").strip()
+                if not line or not line.startswith("data:"):
+                    continue
+                data_str = line[5:].strip()
+                if data_str == "[DONE]":
+                    break
+                try:
+                    data = json.loads(data_str)
+                    token = data["choices"][0]["delta"].get("content", "")
+                    if token:
+                        full_response.append(token)
+                        yield token
+                except Exception:
+                    continue
+    except Exception as e:
+        print(f"Groq vision stream error: {e}")
+        return
+    finally:
+        if full_response:
+            cache_set(question, "".join(full_response))
+
+
+async def groq_fuse_async(session, question, responses):
+    if is_code_question(question) or has_code_blocks(responses):
+        pre_filtered = "\n\n".join(
+            f"Answer {i+1}:\n{r[:800]}" for i, r in enumerate(responses))
+    else:
+        pre_filtered = algorithmic_fuse(responses)
 
     fusion_prompt = f"""You are FusionAI, a helpful AI assistant. Synthesize the reference answers into one natural response.
 
@@ -217,13 +302,13 @@ Reference answers:
 
     try:
         async with session.post(
-            "https://api.cerebras.ai/v1/chat/completions",
+            "https://api.groq.com/openai/v1/chat/completions",
             headers={
-                "Authorization": f"Bearer {CEREBRAS_API_KEY}",
+                "Authorization": f"Bearer {GROQ_API_KEY}",
                 "Content-Type": "application/json",
             },
             json={
-                "model": "llama3.1-8b",
+                "model": "llama-3.3-70b-versatile",
                 "messages": [{"role": "user", "content": fusion_prompt}],
                 "max_tokens": 8192,
                 "temperature": 0.7,
@@ -233,51 +318,50 @@ Reference answers:
             try:
                 data = await response.json(content_type=None)
             except Exception as e:
-                print(f"Cerebras JSON parse error: {e}")
+                print(f"Groq JSON parse error: {e}")
                 return None
             if not isinstance(data, dict):
-                print(f"Cerebras unexpected type: {type(data)}")
                 return None
             if "error" in data:
-                print(f"Cerebras API error: {data['error']}")
+                print(f"Groq API error: {data['error']}")
                 return None
             if "choices" in data and data["choices"]:
                 content = data["choices"][0]["message"]["content"]
+                if content:
+                    cache_set(question, content)
                 return content if content else None
-            if "message" in data and isinstance(data["message"], dict):
-                content = data["message"].get("content", "")
-                return content if content else None
-            print(f"Cerebras unknown format: {data}")
             return None
     except Exception as e:
-        print(f"Cerebras vision fusion error: {e}")
+        print(f"Groq vision fusion error: {e}")
         return None
 
 
 async def run_vision_pipeline(prompt, question, image_data=None, image_mime=None):
+    cached = cache_get(question)
+    if cached and not image_data:
+        print("Cache hit — skipping model queries")
+        return cached
+
     async with aiohttp.ClientSession() as session:
         if image_data:
             ocr_task = groq_ocr_async(session, image_data, image_mime)
-            query_task = query_all_async(
+            query_task = collect_all_responses(
                 session, prompt, image_data, image_mime)
             ocr_text, responses = await asyncio.gather(ocr_task, query_task)
             if ocr_text:
                 responses.append(ocr_text[:800])
         else:
-            responses = await query_all_async(session, prompt)
-
-        print(f"Vision got {len(responses)} responses")
+            responses = await collect_all_responses(session, prompt)
 
         if not responses:
             return "All models failed to respond. Please try again."
 
-        result = await cerebras_fuse_async(session, question, responses)
+        result = await groq_fuse_async(session, question, responses)
 
         if result:
             cleaned = clean_response(result)
             return cleaned if cleaned else result
 
-        print("Vision Cerebras fusion failed, using fallback")
         fallback = fuse(question, responses)
         return fallback if fallback else "Something went wrong. Please try again."
 
