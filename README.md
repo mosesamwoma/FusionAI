@@ -4,7 +4,7 @@ A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesiz
 
 ## Interface
 
-![FusionAI Interface](screenshort/123.png)
+![FusionAI Interface](screenshort/1.png)
 
 ## How It Works
 
@@ -57,6 +57,13 @@ To stop:
 docker compose down
 ```
 
+## Run CLI
+```bash
+python main.py
+```
+
+Runs FusionAI directly in the terminal — no browser needed. Type your question and get a fused response from all 13 models.
+
 ## Run Locally
 
 **Activate environment:**
@@ -100,12 +107,18 @@ Then open **http://127.0.0.1:5000** in your browser.
 
 ## Usage Example
 ```
-You: What is data science?
+You: what is kuberntaes
 
-FusionAI: Data science is an interdisciplinary field that combines statistics,
-computer science, and domain expertise to extract insights and knowledge from data,
-driving informed business decisions, strategy, and operations,
-and solving complex problems across various fields.
+Kubernetes (also known as K8s) is an open-source container orchestration 
+system for automating the deployment, scaling, and management of containerized applications.
+
+History and Maintenance
+It was originally designed by **Google** and is now maintained by the 
+Cloud Native Computing Foundation (CNCF)
+
+Key Features
+Kubernetes (K8s) is an **open-source container orchestration platform designed to 
+automate the deployment, scaling, and management of containerized applications
 ```
 
 ## Status & Limitations
