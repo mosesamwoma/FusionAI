@@ -31,6 +31,21 @@ A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesiz
 
 **Fusion model:** Groq `llama-3.3-70b-versatile` (streaming)
 
+## API Keys
+
+Get your free API keys:
+
+| Provider | Link |
+|----------|------|
+| Groq | https://console.groq.com |
+| Cerebras | https://cloud.cerebras.ai |
+| Gemini | https://aistudio.google.com |
+| SambaNova | https://cloud.sambanova.ai |
+| Mistral | https://console.mistral.ai |
+| Nvidia | https://build.nvidia.com |
+| Cohere | https://dashboard.cohere.com |
+| OpenRouter | https://openrouter.ai |
+
 ## Configuration
 
 Create a `.env` file in the project root:
@@ -46,6 +61,8 @@ OPENROUTER_API_KEY=your_openrouter_key
 ```
 
 ## Run with Docker (recommended)
+
+Install Docker: https://www.docker.com/products/docker-desktop
 ```bash
 docker compose up --build
 ```
@@ -57,26 +74,19 @@ To stop:
 docker compose down
 ```
 
-## Run CLI
-```bash
-python main.py
-```
-
-Runs FusionAI directly in the terminal — no browser needed. Type your question and get a fused response from all 13 models.
-
 ## Run Locally
 
-**Activate environment:**
+**1. Activate environment:**
 ```bash
 .venv\Scripts\Activate.ps1
 ```
 
-**Install dependencies:**
+**2. Install dependencies:**
 ```bash
 pip install -r requirements.txt
 ```
 
-**Test all providers:**
+**3. Test all providers:**
 ```bash
 python test_providers.py
 ```
@@ -98,7 +108,12 @@ openrouter-gemma-4b: Hi there! How can I help you today?
 openrouter-llama: Hi there! How can I help you today?
 ```
 
-**Run web app:**
+**4. Run CLI:**
+```bash
+python main.py
+```
+
+**5. Run web app:**
 ```bash
 python app.py
 ```
@@ -107,18 +122,11 @@ Then open **http://127.0.0.1:5000** in your browser.
 
 ## Usage Example
 ```
-You: what is kuberntaes?
+You: what is kubernetes?
 
-Kubernetes (also known as K8s) is an open-source container orchestration 
+FusionAI: Kubernetes (also known as K8s) is an open-source container orchestration 
 system for automating the deployment, scaling, and management of containerized applications.
-
-History and Maintenance
-It was originally designed by **Google** and is now maintained by the 
-Cloud Native Computing Foundation (CNCF)
-
-Key Features
-Kubernetes (K8s) is an **open-source container orchestration platform designed to 
-automate the deployment, scaling, and management of containerized applications
+Originally designed by Google, it is now maintained by the Cloud Native Computing Foundation (CNCF).
 ```
 
 ## Status & Limitations
