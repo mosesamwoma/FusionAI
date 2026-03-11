@@ -1,6 +1,6 @@
 # FusionAI
 
-A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesizes their responses into one superior answer using a hybrid algorithmic + neural fusion pipeline.
+A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesizes their responses into one superior answer using a hybrid algorithmic and neural fusion pipeline.
 
 ## Interface
 
