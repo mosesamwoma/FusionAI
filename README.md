@@ -147,6 +147,7 @@ Originally designed by Google, it is now maintained by the Cloud Native Computin
 - Support more providers (OpenAI, Anthropic, Together AI, etc)
 - Multi-user support with authentication
 - User profiles with personalized memory
+- Build an app for for easy accesibilty
 
 ## Contributing
 
