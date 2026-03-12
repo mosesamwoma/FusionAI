@@ -21,7 +21,7 @@ def generate(model_name, conversation, image_data=None, image_mime=None):
                   "messages": conversation, "max_tokens": 1000},
             timeout=30,
         )
-        # Parse safely
+
         try:
             data = response.json()
         except Exception:
@@ -49,7 +49,7 @@ async def async_generate(session, model_name, conversation, image_data=None, ima
                   "messages": conversation, "max_tokens": 1000},
             timeout=aiohttp.ClientTimeout(total=30),
         ) as response:
-            # Parse safely
+
             try:
                 data = await response.json(content_type=None)
             except Exception:
