@@ -8,7 +8,7 @@ A multi-model AI fusion system that queries 13 LLMs simultaneously and synthesiz
 
 ## How It Works
 
-1. A user prompt is sent to all 13 configured LLMs in parallel using `asyncio` + `aiohttp`
+1. A user prompt is sent to all 13 configured LLMs in parallel using `asyncio` and `aiohttp`
 2. Responses are collected with a 15-second hard cap — any model that doesn't respond in time is skipped
 3. Responses are scored using ROUGE-L + Weighted Voting + MMR — high-agreement content scores higher, hallucinations and outliers get buried
 4. Top-ranked sentences are passed to Groq `llama-3.3-70b-versatile` for final synthesis
